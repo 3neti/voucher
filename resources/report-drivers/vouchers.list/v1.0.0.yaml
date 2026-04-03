@@ -1,0 +1,49 @@
+driver:
+  id: vouchers.list
+  version: 1.0.0
+  title: Voucher List
+  description: Full voucher listing with status and type filtering
+  group: vouchers
+  icon: list
+
+columns:
+  - key: code
+    label: Voucher Code
+    type: text
+    sortable: true
+  - key: amount
+    label: Amount
+    type: currency
+    sortable: true
+  - key: voucher_type
+    label: Type
+    type: badge
+    sortable: false
+  - key: status
+    label: Status
+    type: badge
+    sortable: false
+  - key: created_at
+    label: Created
+    type: datetime
+    sortable: true
+
+filters:
+  - key: status
+    label: Status
+    type: select
+    options: [active, redeemed, expired, locked, cancelled, closed]
+  - key: voucher_type
+    label: Type
+    type: select
+    options: [redeemable, payable, settlement]
+  - key: search
+    label: Search
+    type: text
+
+defaults:
+  sort: created_at
+  sort_direction: desc
+  per_page: 20
+
+resolver: LBHurtado\Voucher\Reports\Resolvers\VoucherListResolver

@@ -1,0 +1,83 @@
+{
+    "name": "3neti/voucher",
+    "description": "Digital voucher module for issuance, redemption, and lifecycle management",
+    "keywords": [
+        "laravel",
+        "voucher",
+        "redemption",
+        "issuance",
+        "wallet",
+        "payments"
+    ],
+    "type": "library",
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Lester Hurtado",
+            "email": "lester@hurtado.ph"
+        }
+    ],
+    "support": {
+        "source": "https://github.com/3neti/voucher",
+        "issues": "https://github.com/3neti/voucher/issues"
+    },
+    "autoload": {
+        "psr-4": {
+            "LBHurtado\\Voucher\\": "src/",
+            "LBHurtado\\Voucher\\Database\\Factories\\": "database/factories/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "LBHurtado\\Voucher\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "LBHurtado\\Voucher\\VoucherServiceProvider"
+            ]
+        },
+        "branch-alias": {
+            "dev-main": "1.x-dev"
+        }
+    },
+    "require": {
+        "php": "^8.2",
+        "3neti/cash": "^1.0",
+        "3neti/contact": "^1.0",
+        "3neti/emi-core": "^1.0",
+        "3neti/laravel-model-input": "^1.0",
+        "3neti/settlement-envelope": "^1.0",
+        "3neti/wallet": "^1.0",
+        "brick/money": "^0.10.1",
+        "frittenkeez/laravel-vouchers": "^0.6.0",
+        "lorisleiva/laravel-actions": "^2.9",
+        "propaganistas/laravel-phone": "^6.0",
+        "spatie/laravel-medialibrary": "^11.17",
+        "spatie/laravel-model-status": "^1.18",
+        "spatie/laravel-tags": "^4.10"
+    },
+    "suggest": {
+        "3neti/report-registry": "Required for built-in voucher report resolvers and YAML report drivers"
+    },
+    "require-dev": {
+        "orchestra/testbench": "^10.3",
+        "pestphp/pest": "^3.8",
+        "pestphp/pest-plugin-laravel": "^3.2"
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "test:coverage": "vendor/bin/pest --coverage"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

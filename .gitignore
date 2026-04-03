@@ -1,0 +1,94 @@
+# ------------------------------
+# Composer / PHP
+# ------------------------------
+/vendor/
+composer.lock
+
+# PHPUnit / Pest cache
+.phpunit.result.cache
+.pest.cache
+
+# PHPStan / Psalm
+.phpstan/
+psalm.xml
+psalm-baseline.xml
+
+# ------------------------------
+# Laravel / Testbench
+# ------------------------------
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# If package has a testbench skeleton (optional)
+.phpunit.cache/
+.env
+.env.*
+.phpunit.xml
+.phpunit.xml.dist.bak
+
+# ------------------------------
+# Logs & Debug
+# ------------------------------
+/storage/logs/*
+!/storage/logs/.gitignore
+
+# If storage is included for testbench
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+
+# ------------------------------
+# Node / Frontend (if ever used)
+# ------------------------------
+/node_modules/
+/npm-debug.log*
+/yarn-error.log*
+/yarn.lock
+/package-lock.json
+/public/build/
+/public/hot
+
+# ------------------------------
+# IDE / OS
+# ------------------------------
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# VSCode
+.vscode/
+
+# PhpStorm / IntelliJ
+.idea/
+
+# ------------------------------
+# Coverage / Reports
+# ------------------------------
+/coverage/
+/build/
+/reports/
+
+# ------------------------------
+# Docker / Local Dev
+# ------------------------------
+.docker/
+docker-compose.override.yml
+
+# ------------------------------
+# Misc
+# ------------------------------
+*.log
+*.cache
+*.tmp
+
+# ------------------------------
+# Keep important empty dirs
+# ------------------------------
+!/storage/
+!/storage/logs/.gitignore
+!/bootstrap/cache/.gitignore

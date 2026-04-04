@@ -48,7 +48,7 @@
         "3neti/contact": "^1.0",
         "3neti/emi-core": "^1.0",
         "3neti/laravel-model-input": "^1.0",
-        "3neti/settlement-envelope": "^1.0",
+        "3neti/settlement-envelope": "^1.0.2",
         "3neti/wallet": "^1.0",
         "brick/money": "^0.10.1",
         "frittenkeez/laravel-vouchers": "^0.6.0",

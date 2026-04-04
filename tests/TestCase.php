@@ -111,7 +111,7 @@ abstract class TestCase extends BaseTestCase
         // Run test migrations only if tables don't exist yet
         // (RefreshDatabase will handle them via service provider auto-loading)
         if (! \Illuminate\Support\Facades\Schema::hasTable('vouchers')) {
-            (include 'vendor/frittenkeez/laravel-vouchers/publishes/migrations/2018_06_12_000000_create_voucher_tables.php')->up();
+            (include 'vendor/3neti/laravel-vouchers/publishes/migrations/2018_06_12_000000_create_voucher_tables.php')->up();
             (include __DIR__.'/../database/test-migrations/0001_01_01_000000_create_users_table.php')->up();
             (include __DIR__.'/../database/test-migrations/2024_07_02_202500_create_money_issuers_table.php')->up();
             (include __DIR__.'/../database/test-migrations/2024_08_03_202500_create_statuses_table.php')->up();

@@ -51,7 +51,7 @@
         "3neti/settlement-envelope": "^1.0.2",
         "3neti/wallet": "^1.0",
         "brick/money": "^0.10.1",
-        "frittenkeez/laravel-vouchers": "^0.6.0",
+        "3neti/laravel-vouchers": "^1.0.0",
         "lorisleiva/laravel-actions": "^2.9",
         "propaganistas/laravel-phone": "^6.0",
         "spatie/laravel-medialibrary": "^11.17",

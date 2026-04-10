@@ -4,7 +4,7 @@ namespace LBHurtado\Voucher\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use LBHurtado\Voucher\Database\Factories\MoneyIssuerFactory;
+use LBHurtado\Voucher\Tests\database\temp\MoneyIssuerFactory;
 
 /**
  * Class MoneyIssuer.

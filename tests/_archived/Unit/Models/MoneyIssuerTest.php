@@ -28,5 +28,5 @@ it('can create a money issuer', function () {
 it('can return a factory instance', function () {
     $factory = MoneyIssuer::newFactory();
 
-    expect($factory)->toBeInstanceOf(\LBHurtado\Voucher\Database\Factories\MoneyIssuerFactory::class);
+    expect($factory)->toBeInstanceOf(\LBHurtado\Voucher\Tests\database\temp\MoneyIssuerFactory::class);
 });

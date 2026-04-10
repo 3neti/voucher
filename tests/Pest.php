@@ -19,9 +19,7 @@ use LBHurtado\EmiCore\Data\PayoutResultData;
 use LBHurtado\EmiCore\Enums\PayoutStatus;
 use LBHurtado\Contact\Models\Contact;
 
-pest()->extend(TestCase::class)
- // ->use(Illuminate\Foundation\Testing\RefreshDatabase::class)
-    ->in('Unit', 'Feature');
+pest()->extend(TestCase::class)->in('Unit', 'Feature');
 
 /*
 |--------------------------------------------------------------------------

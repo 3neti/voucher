@@ -2,7 +2,6 @@
 
 namespace LBHurtado\Voucher;
 
-//use LBHurtado\MoneyIssuer\Services\MoneyIssuerManager;
 use LBHurtado\Voucher\Providers\EventServiceProvider;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Number;
@@ -14,8 +13,6 @@ class VoucherServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-//        $this->app->singleton(MoneyIssuerManager::class, fn () => new MoneyIssuerManager(app()));
-
         $this->mergeConfigFrom(
             __DIR__.'/../config/instructions.php',
             'instructions'

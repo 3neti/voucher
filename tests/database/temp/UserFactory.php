@@ -1,6 +1,6 @@
 <?php
 
-namespace LBHurtado\Voucher\Database\Factories;
+namespace LBHurtado\Voucher\Tests\database\temp;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;

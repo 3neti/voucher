@@ -29,7 +29,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "LBHurtado\\Voucher\\Tests\\": "tests/"
+            "LBHurtado\\Voucher\\Tests\\": "tests/",
+            "LBHurtado\\Voucher\\Tests\\Database\\Factories\\": "tests/database/factories/"
         }
     },
     "extra": {
@@ -48,10 +49,10 @@
         "3neti/contact": "^1.0",
         "3neti/emi-core": "^1.0",
         "3neti/laravel-model-input": "^1.0",
+        "3neti/laravel-vouchers": "^1.0.0",
         "3neti/settlement-envelope": "^1.0.2",
         "3neti/wallet": "^1.0",
         "brick/money": "^0.10.1",
-        "3neti/laravel-vouchers": "^1.0.0",
         "lorisleiva/laravel-actions": "^2.9",
         "propaganistas/laravel-phone": "^6.0",
         "spatie/laravel-medialibrary": "^11.17",

@@ -16,7 +16,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements Confirmable, Customer, Wallet
+use LBHurtado\Voucher\Tests\Database\Factories\UserFactory;
+
+class User extends Authenticatable implements Confirmable, Customer
 {
     use CanConfirm;
     use CanPay;
@@ -46,4 +48,9 @@ class User extends Authenticatable implements Confirmable, Customer, Wallet
         'password',
         'remember_token',
     ];
+
+    protected static function newFactory(): UserFactory
+    {
+        return UserFactory::new();
+    }
 }

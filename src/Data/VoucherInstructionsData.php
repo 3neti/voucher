@@ -55,6 +55,10 @@ class VoucherInstructionsData extends Data
             'cash.validation.mobile_verification' => 'nullable',
             'cash.settlement_rail' => 'nullable|string|in:INSTAPAY,PESONET',
             'cash.fee_strategy' => 'nullable|string|in:absorb,include,add',
+            'cash.slice_mode' => 'nullable|string|in:fixed,open',
+            'cash.slices' => 'nullable|integer|min:1',
+            'cash.max_slices' => 'nullable|integer|min:1',
+            'cash.min_withdrawal' => 'nullable|numeric|min:0',
 
             'inputs' => ['nullable', 'array'],
             'inputs.fields' => ['nullable', 'array'],
@@ -134,6 +138,12 @@ class VoucherInstructionsData extends Data
                 'currency' => $validated['cash']['currency'],
                 'settlement_rail' => $validated['cash']['settlement_rail'] ?? null,
                 'fee_strategy' => $validated['cash']['fee_strategy'] ?? 'absorb',
+                'slice_mode' => $validated['cash']['slice_mode'] ?? null,
+                'slices' => $validated['cash']['slices'] ?? null,
+                'max_slices' => $validated['cash']['max_slices'] ?? null,
+                'min_withdrawal' => isset($validated['cash']['min_withdrawal'])
+                    ? (float) $validated['cash']['min_withdrawal']
+                    : null,
                 'validation' => [
                     'secret' => $validated['cash']['validation']['secret'] ?? null,
                     'mobile' => $validated['cash']['validation']['mobile'] ?? null,
@@ -200,6 +210,10 @@ class VoucherInstructionsData extends Data
                 'currency' => Number::defaultCurrency(),
                 'settlement_rail' => null,
                 'fee_strategy' => 'absorb',
+                'slice_mode' => null,
+                'slices' => null,
+                'max_slices' => null,
+                'min_withdrawal' => null,
                 'validation' => [
                     'secret' => null,
                     'mobile' => null,

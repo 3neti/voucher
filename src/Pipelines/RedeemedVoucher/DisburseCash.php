@@ -2,6 +2,8 @@
 
 namespace LBHurtado\Voucher\Pipelines\RedeemedVoucher;
 
+use LBHurtado\Voucher\Events\VoucherDisbursementFailed;
+use LBHurtado\Voucher\Events\VoucherDisbursementSucceeded;
 use LBHurtado\Voucher\Exceptions\InvalidSettlementRailException;
 use LBHurtado\EmiCore\Contracts\BankRegistryContract;
 use LBHurtado\Voucher\Events\DisburseInputPrepared;
@@ -126,10 +128,17 @@ class DisburseCash
                 'amount' => $input->amount,
                 'bank' => $input->bank_code,
                 'via' => $input->settlement_rail,
+                'account_masked' => $this->maskAccountNumber($input->account_number),
             ]);
 
             $this->recordPendingDisbursement($voucher, $input, $bankRegistry, $e);
 
+            event(new VoucherDisbursementFailed(
+                voucher: $voucher,
+                request: $input,
+                exception: $e,
+                sliceNumber: $sliceNumber,
+            ));
             event(new DisbursementFailed($voucher, $e, $voucher->contact?->mobile));
 
             return $next($voucher);
@@ -223,8 +232,15 @@ class DisburseCash
             'amount' => $input->amount,
             'bank' => $input->bank_code,
             'via' => $input->settlement_rail,
-            'account' => $input->account_number,
+            'account_masked' => $this->maskAccountNumber($input->account_number),
         ]);
+
+        event(new VoucherDisbursementSucceeded(
+            voucher: $voucher,
+            request: $input,
+            result: $response,
+            sliceNumber: $sliceNumber,
+        ));
 
         return $next($voucher);
     }
@@ -283,8 +299,16 @@ class DisburseCash
             throw new RuntimeException("Voucher {$voucher->code} has no Contact attached");
         }
 
-        $rawBank = Arr::get($redeemer->metadata, 'redemption.bank_account', $contact->bank_account);
-        $bankAccount = BankAccount::fromBankAccountWithFallback($rawBank, $contact->bank_account);
+        $rawBank = Arr::get($redeemer->metadata, 'redemption.bank_account');
+
+        if (! is_string($rawBank) || trim($rawBank) === '') {
+            $rawBank = (string) $contact->bank_account;
+        }
+
+        $bankAccount = BankAccount::fromBankAccountWithFallback(
+            $rawBank,
+            (string) $contact->bank_account
+        );
 
         $baseReference = "{$voucher->code}-{$contact->mobile}";
         $reference = $sliceNumber !== null ? "{$baseReference}-S{$sliceNumber}" : $baseReference;
@@ -292,7 +316,6 @@ class DisburseCash
         $account = $bankAccount->getAccountNumber();
         $bank = $bankAccount->getBankCode();
 
-        // Smart rail selection
         $settlementRailEnum = $voucher->instructions?->cash?->settlement_rail ?? null;
 
         if ($settlementRailEnum instanceof SettlementRail) {
@@ -309,7 +332,7 @@ class DisburseCash
             'settlement_rail' => $via,
             'external_id' => (string) $voucher->id,
             'external_code' => $voucher->code,
-            'user_id' => $voucher->user_id,
+            'user_id' => $voucher->owner_id,
             'mobile' => $contact->mobile,
         ]);
     }
@@ -317,5 +340,20 @@ class DisburseCash
     private function resolveBankRegistry(): BankRegistryContract
     {
         return app(BankRegistryContract::class);
+    }
+
+    protected function maskAccountNumber(?string $accountNumber): ?string
+    {
+        if (! $accountNumber) {
+            return null;
+        }
+
+        $length = strlen($accountNumber);
+
+        if ($length <= 4) {
+            return str_repeat('*', $length);
+        }
+
+        return str_repeat('*', $length - 4).substr($accountNumber, -4);
     }
 }

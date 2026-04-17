@@ -47,6 +47,22 @@ class CashInstructionData extends Data
                 ['required', 'string', 'in:absorb,include,add'],
                 'absorb',
             ],
+            'slice_mode' => [
+                ['nullable', 'string', 'in:fixed,open'],
+                null,
+            ],
+            'slices' => [
+                ['nullable', 'integer', 'min:1'],
+                null,
+            ],
+            'max_slices' => [
+                ['nullable', 'integer', 'min:1'],
+                null,
+            ],
+            'min_withdrawal' => [
+                ['nullable', 'numeric', 'min:0'],
+                null,
+            ],
         ];
     }
 

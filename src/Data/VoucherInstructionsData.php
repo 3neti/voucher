@@ -3,6 +3,7 @@
 namespace LBHurtado\Voucher\Data;
 
 use Carbon\CarbonInterval;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Number;
 use LBHurtado\Voucher\Data\Casts\CarbonIntervalCast;
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
@@ -13,7 +14,9 @@ use LBHurtado\Voucher\Rules\ValidISODuration;
 use Propaganistas\LaravelPhone\Rules\Phone;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
+use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 class VoucherInstructionsData extends Data
 {
@@ -30,6 +33,12 @@ class VoucherInstructionsData extends Data
         #[WithTransformer(TtlToStringTransformer::class)]
         #[WithCast(CarbonIntervalCast::class)]
         public ?CarbonInterval $ttl,              // Expiry time (TTL)
+        #[WithTransformer(DateTimeInterfaceTransformer::class)]
+        #[WithCast(DateTimeInterfaceCast::class)]
+        public ?Carbon $starts_at = null,
+        #[WithTransformer(DateTimeInterfaceTransformer::class)]
+        #[WithCast(DateTimeInterfaceCast::class)]
+        public ?Carbon $expires_at = null,
         public ?ValidationInstructionData $validation = null, // Validation instructions
         public ?VoucherMetadataData $metadata = null,   // System metadata (version, copyright, licenses, issuer, redemption URLs)
         public ?VoucherType $voucher_type = null, // Settlement voucher type (REDEEMABLE, PAYABLE, SETTLEMENT)
@@ -243,6 +252,8 @@ class VoucherInstructionsData extends Data
             'prefix' => null, // New field for prefix
             'mask' => null, // New field for mask
             'ttl' => null, // New field for ttl
+            'starts_at' => null,
+            'expires_at' => null,
         ];
 
         return VoucherInstructionsData::from($data_array);

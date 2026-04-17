@@ -4,6 +4,7 @@ namespace LBHurtado\Voucher\Actions;
 
 use Carbon\CarbonInterval;
 use FrittenKeeZ\Vouchers\Facades\Vouchers;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -48,9 +49,9 @@ class GenerateVouchers
             $mask = '****';
         }
 
-        $ttl = $instructions->ttl instanceof CarbonInterval
-            ? $instructions->ttl
-            : CarbonInterval::hours(12); // Default TTL to 12 hours if missing
+//        $ttl = $instructions->ttl instanceof CarbonInterval
+//            ? $instructions->ttl
+//            : CarbonInterval::hours(12); // Default TTL to 12 hours if missing
 
         if (self::DEBUG) {
             Log::debug('[GenerateVouchers] About to create', compact('count', 'prefix', 'mask', 'ttl'));
@@ -71,10 +72,18 @@ class GenerateVouchers
             ->withMetadata(['instructions' => $instructions->toCleanArray()]) // This is most important! Pass instructions as metadata.
             ->withOwner($owner);
 
-        // Only set expiration if TTL is not zero (non-expiring vouchers)
-        if ($ttl->totalSeconds > 0) {
-            $voucherBuilder = $voucherBuilder->withExpireTimeIn($ttl);
+        // ✅ START TIME
+        if ($instructions->starts_at) {
+            $voucherBuilder->withStartTime($instructions->starts_at);
         }
+
+// ✅ EXPIRE TIME (priority 1)
+        if ($instructions->expires_at) {
+            $voucherBuilder->withExpireTime($instructions->expires_at);
+        } elseif ($instructions->ttl) {
+            $voucherBuilder->withExpireTimeIn($instructions->ttl);
+        } else
+            $voucherBuilder->withExpireTimeIn(CarbonInterval::hours(12)); //TODO: make this configurable
 
         $vouchers = $voucherBuilder->create($count);
         if (self::DEBUG) {

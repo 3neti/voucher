@@ -23,7 +23,8 @@ it('applies default lifecycle values on creation', function () {
     $voucher = issueVoucher();
 
     expect($voucher->redeemed_at)->toBeNull()
-        ->and($voucher->expired_at ?? null)->toBeNull()
+        ->and($voucher->starts_at ?? null)->toBeNull()
+        ->and($voucher->expires_at)->not->toBeNull()
         ->and($voucher->state)->toBe(VoucherState::ACTIVE);
 });
 
@@ -65,4 +66,99 @@ it('creates unique voucher references when required', function () {
 
     expect($first->id)->not->toBe($second->id)
         ->and($first->code)->not->toBe($second->code);
+});
+
+it('persists starts_at on generated voucher', function () {
+    $startsAt = now()->addHours(2)->startOfSecond();
+
+    $instructions = validVoucherInstructions(overrides: [
+        'starts_at' => $startsAt->toIso8601String(),
+    ]);
+
+    $voucher = issueVoucher($instructions);
+    $voucher->refresh();
+
+    expect($voucher->starts_at)->not->toBeNull()
+        ->and($voucher->starts_at->equalTo($startsAt))->toBeTrue()
+        ->and($voucher->expires_at)->not->toBeNull()
+        ->and($voucher->expires_at->greaterThan($voucher->starts_at))->toBeTrue()
+        ->and($voucher->state)->toBe(VoucherState::ACTIVE);
+});
+
+it('persists expires_at on generated voucher', function () {
+    $expiresAt = now()->addDay()->startOfSecond();
+
+    $instructions = validVoucherInstructions(overrides: [
+        'expires_at' => $expiresAt->toIso8601String(),
+    ]);
+
+    $voucher = issueVoucher($instructions);
+    $voucher->refresh();
+
+    expect($voucher->expires_at)->not->toBeNull()
+        ->and($voucher->expires_at->equalTo($expiresAt))->toBeTrue()
+        ->and($voucher->starts_at ?? null)->toBeNull()
+        ->and($voucher->state)->toBe(VoucherState::ACTIVE);
+});
+
+it('persists starts_at and expires_at together on generated voucher', function () {
+    $startsAt = now()->addHour()->startOfSecond();
+    $expiresAt = now()->addDay()->startOfSecond();
+
+    $instructions = validVoucherInstructions(overrides: [
+        'starts_at' => $startsAt->toIso8601String(),
+        'expires_at' => $expiresAt->toIso8601String(),
+    ]);
+
+    $voucher = issueVoucher($instructions);
+    $voucher->refresh();
+
+    expect($voucher->starts_at)->not->toBeNull()
+        ->and($voucher->expires_at)->not->toBeNull()
+        ->and($voucher->starts_at->equalTo($startsAt))->toBeTrue()
+        ->and($voucher->expires_at->equalTo($expiresAt))->toBeTrue()
+        ->and($voucher->expires_at->greaterThan($voucher->starts_at))->toBeTrue();
+});
+
+it('computes expires_at from ttl when explicit expires_at is absent', function () {
+    $now = now()->startOfSecond();
+    \Illuminate\Support\Facades\Date::setTestNow($now);
+
+    $instructions = validVoucherInstructions(overrides: [
+        'ttl' => 'PT2H',
+    ]);
+
+    $voucher = issueVoucher($instructions);
+    $voucher->refresh();
+
+    expect($voucher->expires_at)->not->toBeNull()
+        ->and($voucher->expires_at->equalTo($now->copy()->addHours(2)))->toBeTrue()
+        ->and($voucher->starts_at ?? null)->toBeNull();
+});
+
+it('prefers explicit expires_at over ttl', function () {
+    $expiresAt = now()->addDays(2)->startOfSecond();
+
+    $instructions = validVoucherInstructions(overrides: [
+        'ttl' => 'PT2H',
+        'expires_at' => $expiresAt->toIso8601String(),
+    ]);
+
+    $voucher = issueVoucher($instructions);
+    $voucher->refresh();
+
+    expect($voucher->expires_at)->not->toBeNull()
+        ->and($voucher->expires_at->equalTo($expiresAt))->toBeTrue();
+});
+
+it('applies the default 12 hour expiry when no ttl or expires_at is provided', function () {
+    $now = now()->startOfSecond();
+    \Illuminate\Support\Facades\Date::setTestNow($now);
+
+    $voucher = issueVoucher();
+    $voucher->refresh();
+
+    expect($voucher->expires_at)->not->toBeNull()
+        ->and($voucher->expires_at->equalTo($now->copy()->addHours(12)))->toBeTrue()
+        ->and($voucher->starts_at ?? null)->toBeNull();
 });

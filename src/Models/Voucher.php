@@ -83,12 +83,14 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
     {
         // Include parent's casts and add/override
         return array_merge(parent::casts(), [
+            'starts_at' => 'datetime:Y-m-d H:i:s',
+            'expires_at' => 'datetime:Y-m-d H:i:s',
             'processed_on' => 'datetime:Y-m-d H:i:s',
             'voucher_type' => VoucherType::class,
             'state' => VoucherState::class,
             'rules' => 'array',
-            'locked_at' => 'datetime',
-            'closed_at' => 'datetime',
+            'locked_at' => 'datetime:Y-m-d H:i:s',
+            'closed_at' => 'datetime:Y-m-d H:i:s',
         ]);
     }
 

@@ -17,71 +17,173 @@ class RedemptionEvidenceExtractor
 
         $metadata = $this->normalize($redeemerRecord?->metadata);
         $redemption = Arr::get($metadata, 'redemption', []);
+        $inputs = Arr::get($metadata, 'inputs', []);
 
         return new RedemptionEvidenceData(
-            signature: Arr::get($redemption, 'signature'),
-            selfie: Arr::get($redemption, 'selfie'),
+            signature: $this->toNullableString(
+                $this->firstPresent(
+                    Arr::get($redemption, 'signature'),
+                    Arr::get($inputs, 'signature'),
+                )
+            ),
 
-            latitude: $this->toNullableFloat(Arr::get($redemption, 'location.lat')),
-            longitude: $this->toNullableFloat(Arr::get($redemption, 'location.lng')),
+            selfie: $this->toNullableString(
+                $this->firstPresent(
+                    Arr::get($redemption, 'selfie'),
+                    Arr::get($inputs, 'selfie'),
+                )
+            ),
+
+            latitude: $this->toNullableFloat(
+                $this->firstPresent(
+                    Arr::get($redemption, 'location.lat'),
+                    Arr::get($inputs, 'location.lat'),
+                    Arr::get($inputs, 'latitude'),
+                )
+            ),
+
+            longitude: $this->toNullableFloat(
+                $this->firstPresent(
+                    Arr::get($redemption, 'location.lng'),
+                    Arr::get($inputs, 'location.lng'),
+                    Arr::get($inputs, 'longitude'),
+                )
+            ),
 
             otp: $this->toNullableString(
-                Arr::get($redemption, 'otp.value', Arr::get($redemption, 'otp'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'otp.value'),
+                    Arr::get($redemption, 'otp'),
+                    Arr::get($inputs, 'otp'),
+                )
             ),
+
             otp_verified: $this->toNullableBool(
-                Arr::get($redemption, 'otp.verified', Arr::get($redemption, 'otp_verified'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'otp.verified'),
+                    Arr::get($redemption, 'otp_verified'),
+                    Arr::get($inputs, 'otp_verified'),
+                    Arr::get($inputs, 'otp.verified'),
+                )
             ),
+
             otp_verified_at: $this->toNullableCarbon(
-                Arr::get($redemption, 'otp.verified_at', Arr::get($redemption, 'otp_verified_at'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'otp.verified_at'),
+                    Arr::get($redemption, 'otp_verified_at'),
+                    Arr::get($inputs, 'otp_verified_at'),
+                    Arr::get($inputs, 'otp.verified_at'),
+                )
             ),
 
             reference_code: $this->toNullableString(
-                Arr::get($redemption, 'reference_code')
+                $this->firstPresent(
+                    Arr::get($redemption, 'reference_code'),
+                    Arr::get($inputs, 'reference_code'),
+                )
             ),
+
             mobile: $this->toNullableString(
-                Arr::get($redemption, 'mobile')
+                $this->firstPresent(
+                    Arr::get($redemption, 'mobile'),
+                    Arr::get($inputs, 'mobile'),
+                )
             ),
+
             email: $this->toNullableString(
-                Arr::get($redemption, 'email')
+                $this->firstPresent(
+                    Arr::get($redemption, 'email'),
+                    Arr::get($inputs, 'email'),
+                )
             ),
+
             name: $this->toNullableString(
-                Arr::get($redemption, 'name')
+                $this->firstPresent(
+                    Arr::get($redemption, 'name'),
+                    Arr::get($inputs, 'name'),
+                    Arr::get($inputs, 'full_name'),
+                )
             ),
+
             address: $this->toNullableString(
-                Arr::get($redemption, 'address')
+                $this->firstPresent(
+                    Arr::get($redemption, 'address'),
+                    Arr::get($inputs, 'address'),
+                )
             ),
+
             birth_date: $this->toNullableString(
-                Arr::get($redemption, 'birth_date')
+                $this->firstPresent(
+                    Arr::get($redemption, 'birth_date'),
+                    Arr::get($inputs, 'birth_date'),
+                )
             ),
+
             gross_monthly_income: $this->toNullableString(
-                Arr::get($redemption, 'gross_monthly_income')
+                $this->firstPresent(
+                    Arr::get($redemption, 'gross_monthly_income'),
+                    Arr::get($inputs, 'gross_monthly_income'),
+                )
             ),
 
             kyc: $this->toNullableArray(
-                Arr::get($redemption, 'kyc')
+                $this->firstPresent(
+                    Arr::get($redemption, 'kyc'),
+                    Arr::get($inputs, 'kyc'),
+                )
             ),
 
             face_verification_verified: $this->toNullableBool(
-                Arr::get($redemption, 'kyc.face_verification.verified', Arr::get($redemption, 'face_verification.verified'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'kyc.face_verification.verified'),
+                    Arr::get($redemption, 'face_verification.verified'),
+                    Arr::get($inputs, 'kyc.face_verification.verified'),
+                )
             ),
+
             face_match: $this->toNullableBool(
-                Arr::get($redemption, 'kyc.face_verification.face_match', Arr::get($redemption, 'face_verification.face_match'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'kyc.face_verification.face_match'),
+                    Arr::get($redemption, 'face_verification.face_match'),
+                    Arr::get($inputs, 'kyc.face_verification.face_match'),
+                )
             ),
+
             match_confidence: $this->toNullableFloat(
-                Arr::get($redemption, 'kyc.face_verification.match_confidence', Arr::get($redemption, 'face_verification.match_confidence'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'kyc.face_verification.match_confidence'),
+                    Arr::get($redemption, 'face_verification.match_confidence'),
+                    Arr::get($inputs, 'kyc.face_verification.match_confidence'),
+                )
             ),
+
             face_verified_at: $this->toNullableCarbon(
-                Arr::get($redemption, 'kyc.face_verification.verified_at', Arr::get($redemption, 'face_verification.verified_at'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'kyc.face_verification.verified_at'),
+                    Arr::get($redemption, 'face_verification.verified_at'),
+                    Arr::get($inputs, 'kyc.face_verification.verified_at'),
+                )
             ),
+
             face_failure_reason: $this->toNullableString(
-                Arr::get($redemption, 'kyc.face_verification.failure_reason', Arr::get($redemption, 'face_verification.failure_reason'))
+                $this->firstPresent(
+                    Arr::get($redemption, 'kyc.face_verification.failure_reason'),
+                    Arr::get($redemption, 'face_verification.failure_reason'),
+                    Arr::get($inputs, 'kyc.face_verification.failure_reason'),
+                )
             ),
 
             redeemed_at: $this->toNullableCarbon(
-                Arr::get($redemption, 'redeemed_at')
+                $this->firstPresent(
+                    Arr::get($redemption, 'redeemed_at'),
+                    Arr::get($inputs, 'redeemed_at'),
+                )
             ),
 
-            raw: is_array($redemption) ? $redemption : [],
+            raw: [
+                'redemption' => is_array($redemption) ? $redemption : [],
+                'inputs' => is_array($inputs) ? $inputs : [],
+            ],
         );
     }
 
@@ -104,6 +206,17 @@ class RedemptionEvidenceExtractor
         }
 
         return [];
+    }
+
+    protected function firstPresent(mixed ...$values): mixed
+    {
+        foreach ($values as $value) {
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     protected function toNullableFloat(mixed $value): ?float
@@ -147,9 +260,15 @@ class RedemptionEvidenceExtractor
 
     protected function toNullableString(mixed $value): ?string
     {
-        return is_string($value) && trim($value) !== ''
-            ? $value
-            : null;
+        if (is_string($value) && trim($value) !== '') {
+            return $value;
+        }
+
+        if (is_numeric($value)) {
+            return (string) $value;
+        }
+
+        return null;
     }
 
     protected function toNullableArray(mixed $value): ?array

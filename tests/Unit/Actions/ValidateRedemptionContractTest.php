@@ -410,3 +410,220 @@ it('passes when required otp is verified', function () {
         ->and($result->code)->toBe($voucher->code)
         ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
 });
+
+it('blocks when required signature input is declared but missing', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['signature'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.passed'))->toBeFalse()
+        ->and(data_get($voucher->metadata, 'redemption_validation.violations.signature'))->toBe('required_input_missing');
+});
+
+it('blocks when required selfie input is declared but missing', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['selfie'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.violations.selfie'))->toBe('required_input_missing');
+});
+
+it('blocks when required otp input is declared but missing', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.violations.otp'))->toBe('required_input_missing');
+});
+
+it('blocks when required location input is declared but missing', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['location'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.violations.location'))->toBe('required_input_missing');
+});
+
+it('passes when all declared required inputs are present', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['signature', 'selfie', 'otp', 'location'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact, [
+        'signature' => 'data:image/png;base64,FAKE_SIGNATURE',
+        'selfie' => 'data:image/jpeg;base64,FAKE_SELFIE',
+        'otp' => [
+            'value' => '123456',
+        ],
+        'location' => [
+            'lat' => 14.5995,
+            'lng' => 120.9842,
+        ],
+    ]);
+
+    $result = runValidateRedemptionContract($voucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('blocks when kyc input is declared but absent', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.violations.kyc'))->toBe('required_input_missing');
+});
+
+it('passes when kyc input is declared and kyc evidence is present', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact, [
+        'kyc' => [
+            'face_verification' => [
+                'verified' => true,
+                'face_match' => true,
+                'match_confidence' => 0.93,
+                'verified_at' => now()->toIso8601String(),
+            ],
+        ],
+    ]);
+
+    $result = runValidateRedemptionContract($voucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('treats inputs fields as presence checks and validation otp as semantic verification', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact, [
+        'otp' => [
+            'value' => '123456',
+            'verified' => false,
+        ],
+    ]);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.violations.otp'))->toBe('otp_not_verified');
+});
+
+it('treats selfie as presence contract and face match as semantic verification', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['selfie', 'kyc'],
+        ],
+        'validation' => [
+            'face_match' => [
+                'required' => true,
+                'on_failure' => 'block',
+                'min_confidence' => 0.90,
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachRedeemerToVoucher($voucher, $contact, [
+        'selfie' => 'data:image/jpeg;base64,FAKE_SELFIE',
+        'kyc' => [
+            'face_verification' => [
+                'verified' => false,
+                'face_match' => false,
+                'match_confidence' => 0.20,
+                'verified_at' => now()->toIso8601String(),
+            ],
+        ],
+    ]);
+
+    expect(fn () => runValidateRedemptionContract($voucher))
+        ->toThrow(VoucherRedemptionContractViolationException::class);
+
+    $voucher->refresh();
+
+    expect(data_get($voucher->metadata, 'redemption_validation.violations.face_match'))->toBe('face_match_not_verified');
+});

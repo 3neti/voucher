@@ -14,12 +14,25 @@ class RedemptionEvidenceData extends Data
     public function __construct(
         public ?string $signature = null,
         public ?string $selfie = null,
+
         public ?float $latitude = null,
         public ?float $longitude = null,
+
+        public ?string $otp = null,
         public ?bool $otp_verified = null,
         #[WithTransformer(DateTimeInterfaceTransformer::class)]
         #[WithCast(DateTimeInterfaceCast::class)]
         public ?Carbon $otp_verified_at = null,
+
+        public ?string $reference_code = null,
+        public ?string $mobile = null,
+        public ?string $email = null,
+        public ?string $name = null,
+        public ?string $address = null,
+        public ?string $birth_date = null,
+        public ?string $gross_monthly_income = null,
+
+        public ?array $kyc = null,
 
         public ?bool $face_verification_verified = null,
         public ?bool $face_match = null,

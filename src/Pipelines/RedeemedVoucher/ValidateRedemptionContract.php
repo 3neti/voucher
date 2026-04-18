@@ -17,12 +17,6 @@ class ValidateRedemptionContract
 
     public function handle(Voucher $voucher, Closure $next): Voucher
     {
-        $validation = $voucher->instructions?->validation;
-
-        if (! $validation) {
-            return $next($voucher);
-        }
-
         $result = $this->engine->validate($voucher);
 
         if ($result->passed) {

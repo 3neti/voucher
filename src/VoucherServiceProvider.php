@@ -10,6 +10,7 @@ use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
 use LBHurtado\Voucher\Validators\FaceMatchRuleValidator;
 use LBHurtado\Voucher\Validators\LocationRuleValidator;
 use LBHurtado\Voucher\Validators\OtpRuleValidator;
+use LBHurtado\Voucher\Validators\RequiredInputFieldsValidator;
 use LBHurtado\Voucher\Validators\SelfieRuleValidator;
 use LBHurtado\Voucher\Validators\SignatureRuleValidator;
 use LBHurtado\Voucher\Validators\TimeRuleValidator;
@@ -40,6 +41,7 @@ class VoucherServiceProvider extends ServiceProvider
 
         $this->app->singleton(RedemptionEvidenceExtractor::class);
 
+        $this->app->singleton(RequiredInputFieldsValidator::class);
         $this->app->singleton(SignatureRuleValidator::class);
         $this->app->singleton(SelfieRuleValidator::class);
         $this->app->singleton(LocationRuleValidator::class);
@@ -51,6 +53,7 @@ class VoucherServiceProvider extends ServiceProvider
             return new RedemptionContractEngine(
                 extractor: $app->make(RedemptionEvidenceExtractor::class),
                 validators: [
+                    $app->make(RequiredInputFieldsValidator::class),
                     $app->make(SignatureRuleValidator::class),
                     $app->make(SelfieRuleValidator::class),
                     $app->make(LocationRuleValidator::class),

@@ -92,3 +92,5 @@ docker-compose.override.yml
 !/storage/
 !/storage/logs/.gitignore
 !/bootstrap/cache/.gitignore
+
+tests/_archived/

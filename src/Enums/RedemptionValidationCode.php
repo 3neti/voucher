@@ -5,6 +5,7 @@ namespace LBHurtado\Voucher\Enums;
 enum RedemptionValidationCode: string
 {
     case MISSING = 'missing';
+    case REQUIRED_INPUT_MISSING = 'required_input_missing';
     case OUTSIDE_RADIUS = 'outside_radius';
     case INVALID = 'invalid';
     case OTP_NOT_VERIFIED = 'otp_not_verified';

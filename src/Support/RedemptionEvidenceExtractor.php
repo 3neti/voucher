@@ -21,14 +21,44 @@ class RedemptionEvidenceExtractor
         return new RedemptionEvidenceData(
             signature: Arr::get($redemption, 'signature'),
             selfie: Arr::get($redemption, 'selfie'),
+
             latitude: $this->toNullableFloat(Arr::get($redemption, 'location.lat')),
             longitude: $this->toNullableFloat(Arr::get($redemption, 'location.lng')),
 
+            otp: $this->toNullableString(
+                Arr::get($redemption, 'otp.value', Arr::get($redemption, 'otp'))
+            ),
             otp_verified: $this->toNullableBool(
                 Arr::get($redemption, 'otp.verified', Arr::get($redemption, 'otp_verified'))
             ),
             otp_verified_at: $this->toNullableCarbon(
                 Arr::get($redemption, 'otp.verified_at', Arr::get($redemption, 'otp_verified_at'))
+            ),
+
+            reference_code: $this->toNullableString(
+                Arr::get($redemption, 'reference_code')
+            ),
+            mobile: $this->toNullableString(
+                Arr::get($redemption, 'mobile')
+            ),
+            email: $this->toNullableString(
+                Arr::get($redemption, 'email')
+            ),
+            name: $this->toNullableString(
+                Arr::get($redemption, 'name')
+            ),
+            address: $this->toNullableString(
+                Arr::get($redemption, 'address')
+            ),
+            birth_date: $this->toNullableString(
+                Arr::get($redemption, 'birth_date')
+            ),
+            gross_monthly_income: $this->toNullableString(
+                Arr::get($redemption, 'gross_monthly_income')
+            ),
+
+            kyc: $this->toNullableArray(
+                Arr::get($redemption, 'kyc')
             ),
 
             face_verification_verified: $this->toNullableBool(
@@ -43,10 +73,8 @@ class RedemptionEvidenceExtractor
             face_verified_at: $this->toNullableCarbon(
                 Arr::get($redemption, 'kyc.face_verification.verified_at', Arr::get($redemption, 'face_verification.verified_at'))
             ),
-            face_failure_reason: Arr::get(
-                $redemption,
-                'kyc.face_verification.failure_reason',
-                Arr::get($redemption, 'face_verification.failure_reason')
+            face_failure_reason: $this->toNullableString(
+                Arr::get($redemption, 'kyc.face_verification.failure_reason', Arr::get($redemption, 'face_verification.failure_reason'))
             ),
 
             redeemed_at: $this->toNullableCarbon(
@@ -115,5 +143,19 @@ class RedemptionEvidenceExtractor
         }
 
         return null;
+    }
+
+    protected function toNullableString(mixed $value): ?string
+    {
+        return is_string($value) && trim($value) !== ''
+            ? $value
+            : null;
+    }
+
+    protected function toNullableArray(mixed $value): ?array
+    {
+        return is_array($value) && $value !== []
+            ? $value
+            : null;
     }
 }

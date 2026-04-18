@@ -627,3 +627,185 @@ it('treats selfie as presence contract and face match as semantic verification',
 
     expect(data_get($voucher->metadata, 'redemption_validation.violations.face_match'))->toBe('face_match_not_verified');
 });
+
+function attachInputsRedeemer(\LBHurtado\Voucher\Models\Voucher $voucher, \LBHurtado\Contact\Models\Contact $contact, array $inputs): void
+{
+    $voucher->redeemers()->forceCreate([
+        'redeemer_id' => $contact->getKey(),
+        'redeemer_type' => $contact::class,
+        'metadata' => [
+            'inputs' => $inputs,
+        ],
+    ]);
+
+    $voucher->refresh();
+}
+
+it('passes when required signature is supplied via inputs.signature', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['signature'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'signature' => 'data:image/png;base64,FAKE_SIGNATURE',
+    ]);
+
+    $voucher->refresh();
+
+    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+
+    $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('passes when required selfie is supplied via inputs.selfie', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['selfie'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'selfie' => 'data:image/jpeg;base64,FAKE_SELFIE',
+    ]);
+
+    $voucher->refresh();
+
+    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+
+    $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('passes when required location is supplied via inputs.location', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['location'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'lat' => 14.5995,
+            'lng' => 121.0288,
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+
+    $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('passes when required otp is supplied via inputs.otp', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => '123456',
+    ]);
+
+    $voucher->refresh();
+
+    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+
+    $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('passes when required kyc is supplied via inputs.kyc', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'kyc' => [
+            'face_verification' => [
+                'verified' => true,
+                'face_match' => true,
+                'match_confidence' => 0.95,
+            ],
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+
+    $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('passes when multiple required inputs are supplied via inputs only', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['name', 'email', 'birth_date', 'otp', 'signature', 'selfie', 'location', 'kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'name' => 'Juan Dela Cruz',
+        'email' => 'juan@example.com',
+        'birth_date' => '1990-01-01',
+        'otp' => '123456',
+        'signature' => 'data:image/png;base64,FAKE_SIGNATURE',
+        'selfie' => 'data:image/jpeg;base64,FAKE_SELFIE',
+        'location' => [
+            'lat' => 14.5995,
+            'lng' => 121.0288,
+        ],
+        'kyc' => [
+            'face_verification' => [
+                'verified' => true,
+                'face_match' => true,
+                'match_confidence' => 0.95,
+            ],
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+
+    $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});

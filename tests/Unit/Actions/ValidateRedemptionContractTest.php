@@ -809,3 +809,398 @@ it('passes when multiple required inputs are supplied via inputs only', function
         ->and($result->code)->toBe($voucher->code)
         ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
 });
+
+it('blocks when inputs.signature is an empty string', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['signature'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'signature' => '',
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.signature'))
+        ->toBe('required_input_missing');
+});
+
+it('blocks when inputs.selfie is an empty string', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['selfie'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'selfie' => '',
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.selfie'))
+        ->toBe('required_input_missing');
+});
+
+it('blocks when inputs.location has latitude but no longitude', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['location'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'lat' => 14.5995,
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))
+        ->toBe('required_input_missing');
+});
+
+it('blocks when inputs.location has longitude but no latitude', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['location'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'lng' => 121.0288,
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))
+        ->toBe('required_input_missing');
+});
+
+it('blocks when inputs.kyc is an empty array', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'kyc' => [],
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.kyc'))
+        ->toBe('required_input_missing');
+});
+
+it('blocks when inputs.otp is an empty string', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'otp' => '',
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
+        ->toBe('required_input_missing');
+});
+
+it('blocks when multiple inputs-only required fields are blank or incomplete', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['signature', 'selfie', 'otp', 'location', 'kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'signature' => '',
+            'selfie' => '',
+            'otp' => '',
+            'location' => [
+                'lat' => 14.5995,
+            ],
+            'kyc' => [],
+        ],
+    ]);
+
+    $voucher->refresh();
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.signature'))->toBe('required_input_missing')
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.selfie'))->toBe('required_input_missing')
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))->toBe('required_input_missing')
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))->toBe('required_input_missing')
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.kyc'))->toBe('required_input_missing');
+});
+
+it('blocks when inputs.otp is present but not verified and otp validation is required', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => '123456',
+        'otp_verified' => false,
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
+        ->toBe('otp_not_verified');
+});
+
+it('blocks when inputs.location is present but outside the allowed radius', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['location'],
+        ],
+        'validation' => [
+            'location' => [
+                'required' => true,
+                'target_lat' => 14.646954526919632,
+                'target_lng' => 121.0288619903668,
+                'radius_meters' => 50,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'lat' => 14.5995,
+            'lng' => 121.0288,
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))
+        ->toBe('outside_radius');
+});
+
+it('blocks when inputs.kyc is present but face verification is not verified', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+        'validation' => [
+            'face_match' => [
+                'required' => true,
+                'on_failure' => 'block',
+                'min_confidence' => 0.90,
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'kyc' => [
+            'face_verification' => [
+                'verified' => false,
+                'face_match' => false,
+                'match_confidence' => 0.20,
+            ],
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.face_match'))
+        ->toBe('face_match_not_verified');
+});
+
+it('blocks when inputs.kyc is present but face match confidence is too low', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+        'validation' => [
+            'face_match' => [
+                'required' => true,
+                'on_failure' => 'block',
+                'min_confidence' => 0.95,
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'kyc' => [
+            'face_verification' => [
+                'verified' => true,
+                'face_match' => true,
+                'match_confidence' => 0.80,
+            ],
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.face_match'))
+        ->toBe('face_match_confidence_too_low');
+});
+
+it('allows inputs.location outside radius to continue when on_failure is warn', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['location'],
+        ],
+        'validation' => [
+            'location' => [
+                'required' => true,
+                'target_lat' => 14.646954526919632,
+                'target_lng' => 121.0288619903668,
+                'radius_meters' => 50,
+                'on_failure' => 'warn',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'location' => [
+            'lat' => 14.5995,
+            'lng' => 121.0288,
+        ],
+    ]);
+
+    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.should_block'))->toBeFalse()
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))->toBe('outside_radius');
+});
+
+it('collects multiple semantic issues from inputs only payloads', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp', 'location', 'kyc'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+            'location' => [
+                'required' => true,
+                'target_lat' => 14.646954526919632,
+                'target_lng' => 121.0288619903668,
+                'radius_meters' => 50,
+                'on_failure' => 'block',
+            ],
+            'face_match' => [
+                'required' => true,
+                'on_failure' => 'block',
+                'min_confidence' => 0.90,
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => '123456',
+        'otp_verified' => false,
+        'location' => [
+            'lat' => 14.5995,
+            'lng' => 121.0288,
+        ],
+        'kyc' => [
+            'face_verification' => [
+                'verified' => false,
+                'face_match' => false,
+                'match_confidence' => 0.20,
+            ],
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))->toBe('otp_not_verified')
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))->toBe('outside_radius')
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.face_match'))->toBe('face_match_not_verified');
+});

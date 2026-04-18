@@ -5,6 +5,11 @@ namespace LBHurtado\Voucher;
 use LBHurtado\Voucher\Providers\EventServiceProvider;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Number;
+use LBHurtado\Voucher\Services\RedemptionContractEngine;
+use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
+use LBHurtado\Voucher\Validators\LocationRuleValidator;
+use LBHurtado\Voucher\Validators\SelfieRuleValidator;
+use LBHurtado\Voucher\Validators\SignatureRuleValidator;
 
 class VoucherServiceProvider extends ServiceProvider
 {
@@ -29,6 +34,23 @@ class VoucherServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(MobileVerification\MobileVerificationManager::class);
+
+        $this->app->singleton(RedemptionEvidenceExtractor::class);
+
+        $this->app->singleton(SignatureRuleValidator::class);
+        $this->app->singleton(SelfieRuleValidator::class);
+        $this->app->singleton(LocationRuleValidator::class);
+
+        $this->app->singleton(RedemptionContractEngine::class, function ($app) {
+            return new RedemptionContractEngine(
+                extractor: $app->make(RedemptionEvidenceExtractor::class),
+                validators: [
+                    $app->make(SignatureRuleValidator::class),
+                    $app->make(SelfieRuleValidator::class),
+                    $app->make(LocationRuleValidator::class),
+                ],
+            );
+        });
 
         // Register report driver source path (used by report:install-drivers)
         if (interface_exists(\LBHurtado\ReportRegistry\Contracts\ReportResolverInterface::class)) {

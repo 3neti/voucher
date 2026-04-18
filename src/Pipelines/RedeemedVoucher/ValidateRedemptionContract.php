@@ -2,22 +2,17 @@
 
 namespace LBHurtado\Voucher\Pipelines\RedeemedVoucher;
 
-use ArrayObject;
 use Closure;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException;
 use LBHurtado\Voucher\Models\Voucher;
-use LBHurtado\Voucher\Support\RedemptionLocationValidator;
+use LBHurtado\Voucher\Services\RedemptionContractEngine;
 
 class ValidateRedemptionContract
 {
     public function __construct(
-        protected ?RedemptionLocationValidator $locationValidator = null,
-    ) {
-        $this->locationValidator ??= new RedemptionLocationValidator;
-    }
+        protected RedemptionContractEngine $engine,
+    ) {}
 
     public function handle(Voucher $voucher, Closure $next): Voucher
     {
@@ -27,123 +22,55 @@ class ValidateRedemptionContract
             return $next($voucher);
         }
 
-        $violations = [];
+        $result = $this->engine->validate($voucher);
 
-        // IMPORTANT: redemption metadata lives on the redeemer record, not the Contact model.
-        $redeemerRecord = $voucher->redeemers()->latest('id')->first();
-        $metadata = $this->normalizeMetadata($redeemerRecord?->metadata);
-
-        if ($validation->signature?->required) {
-            $signature = Arr::get($metadata, 'redemption.signature');
-
-            if (! is_string($signature) || trim($signature) === '') {
-                $violations['signature'] = 'missing';
-            }
-        }
-
-        if ($validation->selfie?->required) {
-            $selfie = Arr::get($metadata, 'redemption.selfie');
-
-            if (! is_string($selfie) || trim($selfie) === '') {
-                $violations['selfie'] = 'missing';
-            }
-        }
-
-        if ($validation->location?->required) {
-            $currentLat = Arr::get($metadata, 'redemption.location.lat');
-            $currentLng = Arr::get($metadata, 'redemption.location.lng');
-
-            if ($currentLat === null || $currentLng === null) {
-                $violations['location'] = 'missing';
-            } elseif (
-                $validation->location->target_lat !== null
-                && $validation->location->target_lng !== null
-                && $validation->location->radius_meters !== null
-            ) {
-                $withinRadius = $this->locationValidator->isWithinRadius(
-                    (float) $currentLat,
-                    (float) $currentLng,
-                    (float) $validation->location->target_lat,
-                    (float) $validation->location->target_lng,
-                    (int) $validation->location->radius_meters,
-                );
-
-                if (! $withinRadius) {
-                    $violations['location'] = 'outside_radius';
-                }
-            }
-        }
-
-        if ($violations === []) {
+        if ($result->passed) {
             return $next($voucher);
         }
 
-        $this->persistValidationFailures($voucher, $violations);
+        $this->persistValidationResult($voucher, $result);
 
-        $shouldBlock = $this->shouldBlock($validation, $violations);
-
-        if (! $shouldBlock) {
+        if (! $result->should_block) {
             Log::warning('[ValidateRedemptionContract] Validation warnings only.', [
                 'voucher_code' => $voucher->code,
-                'violations' => $violations,
+                'issues' => collect($result->issues)->map(fn ($issue) => [
+                    'field' => $issue->field,
+                    'code' => $issue->code->value,
+                    'severity' => $issue->severity->value,
+                ])->all(),
             ]);
 
             return $next($voucher);
         }
 
-        throw new VoucherRedemptionContractViolationException($violations);
+        throw new VoucherRedemptionContractViolationException(
+            violations: collect($result->issues)->mapWithKeys(
+                fn ($issue) => [$issue->field => $issue->code->value]
+            )->all()
+        );
     }
 
-    protected function persistValidationFailures(Voucher $voucher, array $violations): void
+    protected function persistValidationResult(Voucher $voucher, $result): void
     {
         $metadata = $voucher->metadata ?? [];
 
         $metadata['redemption_validation'] = [
-            'passed' => false,
-            'violations' => $violations,
-            'checked_at' => now()->toIso8601String(),
+            'passed' => $result->passed,
+            'should_block' => $result->should_block,
+            'checked_at' => $result->checked_at,
+            'issues' => collect($result->issues)->map(fn ($issue) => [
+                'field' => $issue->field,
+                'code' => $issue->code->value,
+                'severity' => $issue->severity->value,
+                'message' => $issue->message,
+                'context' => $issue->context,
+            ])->values()->all(),
+            'violations' => collect($result->issues)->mapWithKeys(
+                fn ($issue) => [$issue->field => $issue->code->value]
+            )->all(),
         ];
 
         $voucher->metadata = $metadata;
         $voucher->save();
-    }
-
-    protected function shouldBlock(object $validation, array $violations): bool
-    {
-        foreach ($violations as $field => $reason) {
-            $mode = match ($field) {
-                'signature' => $validation->signature?->on_failure ?? 'block',
-                'selfie' => $validation->selfie?->on_failure ?? 'block',
-                'location' => $validation->location?->on_failure ?? 'block',
-                default => 'block',
-            };
-
-            if ($mode === 'block') {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    protected function normalizeMetadata(mixed $metadata): array
-    {
-        if (is_array($metadata)) {
-            return $metadata;
-        }
-
-        if ($metadata instanceof ArrayObject) {
-            return $metadata->getArrayCopy();
-        }
-
-        if ($metadata instanceof Arrayable) {
-            return $metadata->toArray();
-        }
-
-        if (is_object($metadata) && method_exists($metadata, 'toArray')) {
-            return $metadata->toArray();
-        }
-
-        return [];
     }
 }

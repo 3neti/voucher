@@ -135,6 +135,14 @@ class VoucherInstructionsData extends Data
             'validation.time.window.timezone' => 'required_with:validation.time.window|string|timezone',
             'validation.time.limit_minutes' => 'nullable|integer|min:1|max:1440',
             'validation.time.track_duration' => 'nullable|boolean',
+
+            'validation.signature' => 'nullable|array',
+            'validation.signature.required' => 'required_with:validation.signature|boolean',
+            'validation.signature.on_failure' => 'nullable|in:block,warn',
+
+            'validation.selfie' => 'nullable|array',
+            'validation.selfie.required' => 'required_with:validation.selfie|boolean',
+            'validation.selfie.on_failure' => 'nullable|in:block,warn',
         ];
     }
 
@@ -180,6 +188,15 @@ class VoucherInstructionsData extends Data
                 'og_source' => $validated['rider']['og_source'] ?? null,
             ],
             'validation' => isset($validated['validation']) ? [
+                'signature' => isset($validated['validation']['signature']) ? [
+                    'required' => $validated['validation']['signature']['required'],
+                    'on_failure' => $validated['validation']['signature']['on_failure'] ?? 'block',
+                ] : null,
+
+                'selfie' => isset($validated['validation']['selfie']) ? [
+                    'required' => $validated['validation']['selfie']['required'],
+                    'on_failure' => $validated['validation']['selfie']['on_failure'] ?? 'block',
+                ] : null,
                 'location' => isset($validated['validation']['location']) ? [
                     'required' => $validated['validation']['location']['required'],
                     'target_lat' => $validated['validation']['location']['target_lat'],
@@ -247,6 +264,12 @@ class VoucherInstructionsData extends Data
                 'splash' => null,
                 'splash_timeout' => null,
                 'og_source' => null,
+            ],
+            'validation' => [
+                'signature' => null,
+                'selfie' => null,
+                'location' => null,
+                'time' => null,
             ],
             'count' => 1, // New field for count
             'prefix' => null, // New field for prefix

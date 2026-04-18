@@ -19,6 +19,8 @@ class ValidationInstructionData extends Data
     use HasSafeDefaults;
 
     public function __construct(
+        public ?SignatureValidationInstructionData $signature = null,
+        public ?SelfieValidationInstructionData $selfie = null,
         public ?LocationValidationData $location = null,
         public ?TimeValidationData $time = null,
     ) {

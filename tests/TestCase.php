@@ -120,6 +120,20 @@ abstract class TestCase extends BaseTestCase
                 $this->getPackageMigrationPath(\Bavix\Wallet\WalletServiceProvider::class)
             );
         }
+
+        // Cash schema owned by 3neti/cash
+        if (! Schema::hasTable('cash')) {
+            $this->runMigrationDirectory(
+                $this->getPackageMigrationPath(\LBHurtado\Cash\CashServiceProvider::class)
+            );
+        }
+
+        // Cash schema owned by 3neti/contact
+        if (! Schema::hasTable('contacts')) {
+            $this->runMigrationDirectory(
+                $this->getPackageMigrationPath(\LBHurtado\Contact\ContactServiceProvider::class)
+            );
+        }
     }
 
     protected function runMigrationDirectory(string $path): void

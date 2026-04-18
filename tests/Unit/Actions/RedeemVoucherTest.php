@@ -5,6 +5,7 @@ use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
 use FrittenKeeZ\Vouchers\Facades\Vouchers;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract;
 
 uses(RefreshDatabase::class);
 
@@ -15,6 +16,7 @@ beforeEach(function () {
 it('uses the configured redemption pipeline in the intended order', function () {
     expect(config('voucher-pipeline.post-redemption'))->toBe([
         ValidateRedeemerAndCash::class,
+        ValidateRedemptionContract::class,
         DisburseCash::class,
     ]);
 });

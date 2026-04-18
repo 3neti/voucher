@@ -24,6 +24,7 @@ return [
     ],
     'post-redemption' => [
         \LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash::class,
+        \LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class,
         \LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash::class,
     ],
 ];

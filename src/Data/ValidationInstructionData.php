@@ -22,6 +22,7 @@ class ValidationInstructionData extends Data
         public ?SignatureValidationInstructionData $signature = null,
         public ?SelfieValidationInstructionData $selfie = null,
         public ?LocationValidationData $location = null,
+        public ?OtpValidationInstructionData $otp = null,
         public ?TimeValidationData $time = null,
     ) {
         $this->applyRulesAndDefaults();

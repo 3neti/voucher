@@ -8,8 +8,10 @@ use Illuminate\Support\Number;
 use LBHurtado\Voucher\Services\RedemptionContractEngine;
 use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
 use LBHurtado\Voucher\Validators\LocationRuleValidator;
+use LBHurtado\Voucher\Validators\OtpRuleValidator;
 use LBHurtado\Voucher\Validators\SelfieRuleValidator;
 use LBHurtado\Voucher\Validators\SignatureRuleValidator;
+use LBHurtado\Voucher\Validators\TimeRuleValidator;
 
 class VoucherServiceProvider extends ServiceProvider
 {
@@ -40,6 +42,8 @@ class VoucherServiceProvider extends ServiceProvider
         $this->app->singleton(SignatureRuleValidator::class);
         $this->app->singleton(SelfieRuleValidator::class);
         $this->app->singleton(LocationRuleValidator::class);
+        $this->app->singleton(OtpRuleValidator::class);
+        $this->app->singleton(TimeRuleValidator::class);
 
         $this->app->singleton(RedemptionContractEngine::class, function ($app) {
             return new RedemptionContractEngine(
@@ -48,6 +52,8 @@ class VoucherServiceProvider extends ServiceProvider
                     $app->make(SignatureRuleValidator::class),
                     $app->make(SelfieRuleValidator::class),
                     $app->make(LocationRuleValidator::class),
+                    $app->make(OtpRuleValidator::class),
+                    $app->make(TimeRuleValidator::class),
                 ],
             );
         });

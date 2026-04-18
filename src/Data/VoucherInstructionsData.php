@@ -143,6 +143,10 @@ class VoucherInstructionsData extends Data
             'validation.selfie' => 'nullable|array',
             'validation.selfie.required' => 'required_with:validation.selfie|boolean',
             'validation.selfie.on_failure' => 'nullable|in:block,warn',
+
+            'validation.otp' => 'nullable|array',
+            'validation.otp.required' => 'required_with:validation.otp|boolean',
+            'validation.otp.on_failure' => 'nullable|in:block,warn',
         ];
     }
 
@@ -203,6 +207,10 @@ class VoucherInstructionsData extends Data
                     'target_lng' => $validated['validation']['location']['target_lng'],
                     'radius_meters' => $validated['validation']['location']['radius_meters'],
                     'on_failure' => $validated['validation']['location']['on_failure'],
+                ] : null,
+                'otp' => isset($validated['validation']['otp']) ? [
+                    'required' => $validated['validation']['otp']['required'],
+                    'on_failure' => $validated['validation']['otp']['on_failure'] ?? 'block',
                 ] : null,
                 'time' => isset($validated['validation']['time']) ? [
                     'window' => isset($validated['validation']['time']['window']) ? [
@@ -269,6 +277,7 @@ class VoucherInstructionsData extends Data
                 'signature' => null,
                 'selfie' => null,
                 'location' => null,
+                'otp' => null,
                 'time' => null,
             ],
             'count' => 1, // New field for count

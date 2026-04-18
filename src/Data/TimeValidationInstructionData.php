@@ -14,9 +14,8 @@ use Spatie\LaravelData\Data;
  * @property TimeWindowData|null $window - Time window for allowed redemptions
  * @property int|null $limit_minutes - Max minutes to complete redemption
  * @property bool $track_duration - Whether to track redemption duration
- * @deprecated Use TimeValidationInstructionData instead.
  */
-class TimeValidationData extends Data
+class TimeValidationInstructionData extends Data
 {
     use HasSafeDefaults;
 

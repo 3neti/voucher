@@ -16,6 +16,7 @@ use Spatie\LaravelData\Data;
  * @property float $target_lng - Target longitude (-180 to 180)
  * @property int $radius_meters - Acceptable radius in meters
  * @property string $on_failure - Action on failure: 'block' or 'warn'
+ * @deprecated Use LocationValidationInstructionData instead.
  */
 class LocationValidationData extends Data
 {

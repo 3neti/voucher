@@ -11,8 +11,8 @@ use Spatie\LaravelData\Data;
  * Aggregates location and time validation configurations
  * for voucher redemption validation.
  *
- * @property LocationValidationData|null $location - Location validation config
- * @property TimeValidationData|null $time - Time validation config
+ * @property LocationValidationInstructionData|null $location - Location validation config
+ * @property TimeValidationInstructionData|null $time - Time validation config
  */
 class ValidationInstructionData extends Data
 {
@@ -20,11 +20,11 @@ class ValidationInstructionData extends Data
 
     public function __construct(
         public ?SignatureValidationInstructionData $signature = null,
-        public ?SelfieValidationInstructionData $selfie = null,
-        public ?LocationValidationData $location = null,
-        public ?OtpValidationInstructionData $otp = null,
+        public ?SelfieValidationInstructionData    $selfie = null,
+        public ?LocationValidationInstructionData  $location = null,
+        public ?OtpValidationInstructionData       $otp = null,
         public ?FaceMatchValidationInstructionData $face_match = null,
-        public ?TimeValidationData $time = null,
+        public ?TimeValidationInstructionData      $time = null,
     ) {
         $this->applyRulesAndDefaults();
     }

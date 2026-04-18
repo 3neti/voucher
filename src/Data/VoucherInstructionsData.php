@@ -147,6 +147,11 @@ class VoucherInstructionsData extends Data
             'validation.otp' => 'nullable|array',
             'validation.otp.required' => 'required_with:validation.otp|boolean',
             'validation.otp.on_failure' => 'nullable|in:block,warn',
+
+            'validation.face_match' => 'nullable|array',
+            'validation.face_match.required' => 'required_with:validation.face_match|boolean',
+            'validation.face_match.on_failure' => 'nullable|in:block,warn',
+            'validation.face_match.min_confidence' => 'nullable|numeric|min:0|max:1',
         ];
     }
 
@@ -221,6 +226,13 @@ class VoucherInstructionsData extends Data
                     'limit_minutes' => $validated['validation']['time']['limit_minutes'] ?? null,
                     'track_duration' => $validated['validation']['time']['track_duration'] ?? true,
                 ] : null,
+                'face_match' => isset($validated['validation']['face_match']) ? [
+                    'required' => $validated['validation']['face_match']['required'],
+                    'on_failure' => $validated['validation']['face_match']['on_failure'] ?? 'block',
+                    'min_confidence' => isset($validated['validation']['face_match']['min_confidence'])
+                        ? (float) $validated['validation']['face_match']['min_confidence']
+                        : null,
+                ] : null,
             ] : null,
             'count' => $validated['count'],
             'prefix' => $validated['prefix'] ?? '',
@@ -279,6 +291,7 @@ class VoucherInstructionsData extends Data
                 'location' => null,
                 'otp' => null,
                 'time' => null,
+                'face_match' => null,
             ],
             'count' => 1, // New field for count
             'prefix' => null, // New field for prefix

@@ -23,6 +23,7 @@ class ValidationInstructionData extends Data
         public ?SelfieValidationInstructionData $selfie = null,
         public ?LocationValidationData $location = null,
         public ?OtpValidationInstructionData $otp = null,
+        public ?FaceMatchValidationInstructionData $face_match = null,
         public ?TimeValidationData $time = null,
     ) {
         $this->applyRulesAndDefaults();

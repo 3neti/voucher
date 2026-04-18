@@ -20,9 +20,19 @@ class RedemptionEvidenceData extends Data
         #[WithTransformer(DateTimeInterfaceTransformer::class)]
         #[WithCast(DateTimeInterfaceCast::class)]
         public ?Carbon $otp_verified_at = null,
+
+        public ?bool $face_verification_verified = null,
+        public ?bool $face_match = null,
+        public ?float $match_confidence = null,
+        #[WithTransformer(DateTimeInterfaceTransformer::class)]
+        #[WithCast(DateTimeInterfaceCast::class)]
+        public ?Carbon $face_verified_at = null,
+        public ?string $face_failure_reason = null,
+
         #[WithTransformer(DateTimeInterfaceTransformer::class)]
         #[WithCast(DateTimeInterfaceCast::class)]
         public ?Carbon $redeemed_at = null,
+
         public ?array $raw = null,
     ) {}
 }

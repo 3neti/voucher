@@ -23,15 +23,36 @@ class RedemptionEvidenceExtractor
             selfie: Arr::get($redemption, 'selfie'),
             latitude: $this->toNullableFloat(Arr::get($redemption, 'location.lat')),
             longitude: $this->toNullableFloat(Arr::get($redemption, 'location.lng')),
+
             otp_verified: $this->toNullableBool(
                 Arr::get($redemption, 'otp.verified', Arr::get($redemption, 'otp_verified'))
             ),
             otp_verified_at: $this->toNullableCarbon(
                 Arr::get($redemption, 'otp.verified_at', Arr::get($redemption, 'otp_verified_at'))
             ),
+
+            face_verification_verified: $this->toNullableBool(
+                Arr::get($redemption, 'kyc.face_verification.verified', Arr::get($redemption, 'face_verification.verified'))
+            ),
+            face_match: $this->toNullableBool(
+                Arr::get($redemption, 'kyc.face_verification.face_match', Arr::get($redemption, 'face_verification.face_match'))
+            ),
+            match_confidence: $this->toNullableFloat(
+                Arr::get($redemption, 'kyc.face_verification.match_confidence', Arr::get($redemption, 'face_verification.match_confidence'))
+            ),
+            face_verified_at: $this->toNullableCarbon(
+                Arr::get($redemption, 'kyc.face_verification.verified_at', Arr::get($redemption, 'face_verification.verified_at'))
+            ),
+            face_failure_reason: Arr::get(
+                $redemption,
+                'kyc.face_verification.failure_reason',
+                Arr::get($redemption, 'face_verification.failure_reason')
+            ),
+
             redeemed_at: $this->toNullableCarbon(
                 Arr::get($redemption, 'redeemed_at')
             ),
+
             raw: is_array($redemption) ? $redemption : [],
         );
     }

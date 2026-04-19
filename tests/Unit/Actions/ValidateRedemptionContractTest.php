@@ -1204,3 +1204,180 @@ it('collects multiple semantic issues from inputs only payloads', function () {
         ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))->toBe('outside_radius')
         ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.face_match'))->toBe('face_match_not_verified');
 });
+
+it('passes when otp validation is required and form-flow otp step has verified_at', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => [
+            'otp_code' => '123456',
+            'verified_at' => now()->toIso8601String(),
+            'reference_id' => 'flow-abc123',
+        ],
+    ]);
+
+    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('blocks when otp validation is required and form-flow otp step has explicit verified false', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => [
+            'otp_code' => '123456',
+            'verified' => false,
+            'reference_id' => 'flow-abc123',
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
+        ->toBe('otp_not_verified');
+});
+
+it('blocks when otp validation is required and form-flow otp step has otp_code without verification metadata', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => [
+            'otp_code' => '123456',
+            'reference_id' => 'flow-abc123',
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
+        ->toBe('otp_not_verified');
+});
+
+it('passes when otp is required as input and form-flow otp step provides otp_code', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => [
+            'otp_code' => '123456',
+            'reference_id' => 'flow-abc123',
+        ],
+    ]);
+
+    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('passes when otp is required as input and flat otp_code plus verified_at are supplied', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp_code' => '123456',
+        'verified_at' => now()->toIso8601String(),
+        'reference_id' => 'flow-flat-otp',
+    ]);
+
+    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code)
+        ->and(data_get($voucher->fresh()->metadata, 'redemption_validation'))->toBeNull();
+});
+
+it('prefers explicit verified false over verified_at inference in form-flow otp step payload', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['otp'],
+        ],
+        'validation' => [
+            'otp' => [
+                'required' => true,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'otp' => [
+            'otp_code' => '123456',
+            'verified' => false,
+            'verified_at' => now()->toIso8601String(),
+            'reference_id' => 'flow-abc123',
+        ],
+    ]);
+
+    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
+        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+
+    expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
+        ->toBe('otp_not_verified');
+});

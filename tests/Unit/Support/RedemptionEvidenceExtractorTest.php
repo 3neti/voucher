@@ -252,3 +252,176 @@ it('prefers redemption kyc over inputs kyc when both are present', function () {
         ->and($evidence->face_match)->toBeFalse()
         ->and($evidence->match_confidence)->toBe(0.10);
 });
+
+it('extracts otp from inputs.otp.otp_code', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'otp' => [
+                'otp_code' => '123456',
+                'verified_at' => '2026-04-19T10:30:00+08:00',
+                'reference_id' => 'flow-abc123',
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('123456')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->otp_verified_at)->not->toBeNull()
+        ->and($evidence->otp_verified_at?->toIso8601String())->toStartWith('2026-04-19T10:30:00');
+});
+
+it('extracts otp from flat inputs.otp_code', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'otp_code' => '654321',
+            'verified_at' => '2026-04-19T11:45:00+08:00',
+            'reference_id' => 'flow-flat-001',
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('654321')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->otp_verified_at)->not->toBeNull()
+        ->and($evidence->otp_verified_at?->toIso8601String())->toStartWith('2026-04-19T11:45:00');
+});
+
+it('extracts otp verification from inputs.otp.verified when explicitly false', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'otp' => [
+                'otp_code' => '123456',
+                'verified' => false,
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('123456')
+        ->and($evidence->otp_verified)->toBeFalse()
+        ->and($evidence->otp_verified_at)->toBeNull();
+});
+
+it('extracts otp verification from flat inputs.otp_verified when explicitly false', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'otp' => '123456',
+            'otp_verified' => false,
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('123456')
+        ->and($evidence->otp_verified)->toBeFalse()
+        ->and($evidence->otp_verified_at)->toBeNull();
+});
+
+it('treats otp as verified when inputs.otp.verified_at is present even without explicit verified flag', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'otp' => [
+                'otp_code' => '123456',
+                'verified_at' => '2026-04-19T12:15:00+08:00',
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('123456')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->otp_verified_at)->not->toBeNull();
+});
+
+it('prefers redemption otp over inputs.otp.otp_code when both are present', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'redemption' => [
+            'otp' => [
+                'value' => '999999',
+                'verified' => true,
+                'verified_at' => '2026-04-19T09:00:00+08:00',
+            ],
+        ],
+        'inputs' => [
+            'otp' => [
+                'otp_code' => '123456',
+                'verified_at' => '2026-04-19T10:30:00+08:00',
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('999999')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->otp_verified_at)->not->toBeNull()
+        ->and($evidence->otp_verified_at?->toIso8601String())->toStartWith('2026-04-19T09:00:00');
+});
+
+it('prefers redemption otp verification flag over inferred verification from inputs verified_at', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'redemption' => [
+            'otp' => [
+                'value' => '999999',
+                'verified' => false,
+            ],
+        ],
+        'inputs' => [
+            'otp' => [
+                'otp_code' => '123456',
+                'verified_at' => '2026-04-19T10:30:00+08:00',
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('999999')
+        ->and($evidence->otp_verified)->toBeFalse();
+});
+
+it('returns null otp verification when no verification flag or verified_at is present', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'otp' => [
+                'otp_code' => '123456',
+                'reference_id' => 'flow-abc123',
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('123456')
+        ->and($evidence->otp_verified)->toBeNull()
+        ->and($evidence->otp_verified_at)->toBeNull();
+});

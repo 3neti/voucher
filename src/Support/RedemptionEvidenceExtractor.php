@@ -19,6 +19,33 @@ class RedemptionEvidenceExtractor
         $redemption = Arr::get($metadata, 'redemption', []);
         $inputs = Arr::get($metadata, 'inputs', []);
 
+        $otpRaw = $this->firstPresent(
+            Arr::get($redemption, 'otp.value'),
+            is_scalar(Arr::get($redemption, 'otp')) ? Arr::get($redemption, 'otp') : null,
+
+            Arr::get($inputs, 'otp.value'),
+            Arr::get($inputs, 'otp.otp_code'),
+            is_scalar(Arr::get($inputs, 'otp')) ? Arr::get($inputs, 'otp') : null,
+            Arr::get($inputs, 'otp_code'),
+        );
+
+        $otpVerifiedRaw = $this->firstPresent(
+            Arr::get($redemption, 'otp.verified'),
+            Arr::get($redemption, 'otp_verified'),
+
+            Arr::get($inputs, 'otp.verified'),
+            Arr::get($inputs, 'otp_verified'),
+            Arr::get($inputs, 'verified'),
+        );
+
+        $otpVerifiedAtRaw = $this->firstPresent(
+            Arr::get($redemption, 'otp.verified_at'),
+            Arr::get($redemption, 'otp_verified_at'),
+
+            Arr::get($inputs, 'otp.verified_at'),
+            Arr::get($inputs, 'verified_at'),
+        );
+
         return new RedemptionEvidenceData(
             signature: $this->toNullableString(
                 $this->firstPresent(
@@ -50,31 +77,13 @@ class RedemptionEvidenceExtractor
                 )
             ),
 
-            otp: $this->toNullableString(
-                $this->firstPresent(
-                    Arr::get($redemption, 'otp.value'),
-                    Arr::get($redemption, 'otp'),
-                    Arr::get($inputs, 'otp'),
-                )
-            ),
+            otp: $this->toNullableString($otpRaw),
 
-            otp_verified: $this->toNullableBool(
-                $this->firstPresent(
-                    Arr::get($redemption, 'otp.verified'),
-                    Arr::get($redemption, 'otp_verified'),
-                    Arr::get($inputs, 'otp_verified'),
-                    Arr::get($inputs, 'otp.verified'),
-                )
-            ),
+            otp_verified: $otpVerifiedRaw !== null
+                ? $this->toNullableBool($otpVerifiedRaw)
+                : ($otpVerifiedAtRaw !== null ? true : null),
 
-            otp_verified_at: $this->toNullableCarbon(
-                $this->firstPresent(
-                    Arr::get($redemption, 'otp.verified_at'),
-                    Arr::get($redemption, 'otp_verified_at'),
-                    Arr::get($inputs, 'otp_verified_at'),
-                    Arr::get($inputs, 'otp.verified_at'),
-                )
-            ),
+            otp_verified_at: $this->toNullableCarbon($otpVerifiedAtRaw),
 
             reference_code: $this->toNullableString(
                 $this->firstPresent(

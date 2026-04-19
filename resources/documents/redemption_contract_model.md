@@ -2,58 +2,55 @@
 
 ## Overview
 
-The voucher package defines redemption requirements in two distinct layers:
+The voucher package uses a two-layer redemption contract model.
 
-- `inputs.fields` → **presence contract**
-- `validation.*` → **semantic contract**
+- `inputs.fields` = **presence contract**
+- `validation.*` = **semantic contract**
 
-This separation keeps the redemption pipeline predictable, extensible, and easy to reason about.
+This model is intentionally explicit and should remain stable across future package and host-app changes.
 
 ---
 
-## 1. Presence Contract: `inputs.fields`
+## 1. Presence Contract
 
-`inputs.fields` declares which inputs must be **submitted** before redemption can succeed.
+### Definition
+`inputs.fields` declares what must be collected from the claimant.
 
-Examples:
+Example:
 
 ```php
 'inputs' => [
-    'fields' => ['signature', 'selfie', 'otp', 'location'],
+    'fields' => ['name', 'email', 'otp', 'selfie', 'location', 'kyc'],
 ],
 ```
 
-This means the redeemer must provide:
+This means the claimant must provide these fields before redemption can succeed.
 
-- a signature
-- a selfie
-- an OTP value
-- a location payload
+### Presence is enforced by
+`RequiredInputFieldsValidator`
 
-These checks are enforced by the `RequiredInputFieldsValidator`.
+### Presence means existence, not validity
+Examples:
 
-### What presence means
+- `name` exists
+- `email` exists
+- `otp` exists
+- `signature` exists
+- `selfie` exists
+- `location` contains both latitude and longitude
+- `kyc` exists as a non-empty payload
 
-- `signature` → non-empty signature value exists
-- `selfie` → non-empty selfie value exists
-- `otp` → OTP input value exists
-- `location` → both latitude and longitude exist
-- `kyc` → KYC payload exists
-- `reference_code` → reference code exists
-- `mobile` → mobile exists
-- `email` → email exists
-- `name` → name exists
-- `address` → address exists
-- `birth_date` → birth date exists
-- `gross_monthly_income` → income value exists
-
-Presence checks do **not** determine whether an input is valid beyond existence.
+Presence does not imply:
+- OTP is verified
+- location is within radius
+- face match passed
 
 ---
 
-## 2. Semantic Contract: `validation.*`
+## 2. Semantic Contract
 
-`validation.*` declares what must be **true** about submitted inputs or redemption context.
+### Definition
+`validation.*` declares what must be true about submitted evidence.
 
 Examples:
 
@@ -66,7 +63,7 @@ Examples:
     'location' => [
         'required' => true,
         'target_lat' => 14.5995,
-        'target_lng' => 120.9842,
+        'target_lng' => 121.0288,
         'radius_meters' => 100,
         'on_failure' => 'block',
     ],
@@ -75,176 +72,258 @@ Examples:
         'min_confidence' => 0.90,
         'on_failure' => 'block',
     ],
-],
+]
 ```
 
-Semantic validators enforce rules such as:
-
-- OTP must be verified
-- location must be within radius
-- redemption must occur within a time window
-- face match must pass
-- face match confidence must exceed a threshold
-
-These checks are enforced by pluggable validators such as:
-
-- `OtpRuleValidator`
-- `LocationRuleValidator`
-- `TimeRuleValidator`
-- `FaceMatchRuleValidator`
+These rules are semantic because they evaluate meaning and quality, not mere existence.
 
 ---
 
-## 3. Key Rule of Thumb
+## 3. Canonical Interpretation Rules
 
-### `inputs.fields`
-Declares **what must be submitted**
+## `inputs.fields`
+Means:
+> the field must be collected and present
 
-### `validation.*`
-Declares **what must be true about what was submitted**
+## `validation.*`
+Means:
+> explicit semantic rules must be enforced
 
-This boundary should remain stable across future validators.
+This means:
+
+### OTP
+- `inputs.fields = ['otp']` → OTP must be submitted
+- `validation.otp.required = true` → OTP must be verified
+
+### Location
+- `inputs.fields = ['location']` → coordinates must be submitted
+- `validation.location` → coordinates must satisfy radius rules
+
+### KYC
+- `inputs.fields = ['kyc']` → KYC payload must be present
+- `validation.face_match` → face-match semantics must pass
+
+This separation is now intentional and enforced by tests.
 
 ---
 
-## 4. Examples
+## 4. Important Non-Implications
 
-### Example A: OTP is required and must be verified
+These are especially important for host app integrations.
+
+### KYC does not imply face match
+This is the most important recent refinement.
+
+If a voucher requires:
 
 ```php
 'inputs' => [
-    'fields' => ['otp'],
+    'fields' => ['kyc'],
 ],
+```
+
+that does **not** imply face-match validation should run.
+
+Why:
+- KYC presence can be satisfied by flat KYC handler output
+- flat KYC handler output does not necessarily contain face-match semantics
+
+Face-match must only run when explicitly declared:
+
+```php
 'validation' => [
+    'face_match' => [
+        'required' => true,
+    ],
+]
+```
+
+---
+
+## 5. Accepted Collected Data Shapes
+
+The package now supports both canonical and form-flow-oriented collected data.
+
+## Generic field examples
+```php
+'inputs' => [
+    'name' => 'Juan Dela Cruz',
+    'email' => 'juan@example.com',
+    'birth_date' => '1990-01-01',
+]
+```
+
+## OTP examples
+### scalar
+```php
+'inputs' => [
+    'otp' => '123456',
+]
+```
+
+### nested form-flow OTP step
+```php
+'inputs' => [
     'otp' => [
-        'required' => true,
-        'on_failure' => 'block',
+        'otp_code' => '123456',
+        'verified_at' => '2026-04-19T10:30:00+08:00',
+        'reference_id' => 'flow-abc123',
     ],
-],
+]
 ```
 
-Interpretation:
-
-1. The redeemer must submit an OTP value
-2. The submitted OTP must also be verified
-
-### Example B: Selfie is required and face match must pass
-
+### flat OTP transform
 ```php
 'inputs' => [
-    'fields' => ['selfie', 'kyc'],
-],
-'validation' => [
-    'face_match' => [
-        'required' => true,
-        'min_confidence' => 0.90,
-        'on_failure' => 'block',
-    ],
-],
+    'otp_code' => '123456',
+    'verified_at' => '2026-04-19T10:30:00+08:00',
+]
 ```
 
-Interpretation:
-
-1. The redeemer must submit a selfie
-2. The redeemer must provide KYC evidence
-3. The face verification result must pass
-4. Confidence must meet the declared threshold
-
-### Example C: Location is required, then geofence is enforced
-
+## Signature
 ```php
 'inputs' => [
-    'fields' => ['location'],
-],
-'validation' => [
+    'signature' => 'data:image/png;base64,...',
+]
+```
+
+## Selfie
+```php
+'inputs' => [
+    'selfie' => 'data:image/jpeg;base64,...',
+]
+```
+
+## Location
+### nested
+```php
+'inputs' => [
     'location' => [
-        'required' => true,
-        'target_lat' => 14.5995,
-        'target_lng' => 120.9842,
-        'radius_meters' => 100,
-        'on_failure' => 'block',
+        'lat' => 14.5995,
+        'lng' => 121.0288,
     ],
-],
+]
 ```
 
-Interpretation:
+### flat handler output
+```php
+'inputs' => [
+    'latitude' => 14.5995,
+    'longitude' => 121.0288,
+]
+```
 
-1. The redeemer must submit a location
-2. The location must be inside the allowed radius
+## KYC
+### nested
+```php
+'inputs' => [
+    'kyc' => [
+        'face_verification' => [
+            'verified' => true,
+            'face_match' => true,
+            'match_confidence' => 0.95,
+        ],
+    ],
+]
+```
 
----
-
-## 5. Architecture
-
-The redemption contract is enforced through:
-
-1. `ValidateRedemptionContract` pipeline step
-2. `RedemptionContractEngine`
-3. `RedemptionEvidenceExtractor`
-4. registered validators
-
-### Validator order
-
-A typical validator order is:
-
-1. `RequiredInputFieldsValidator`
-2. `SignatureRuleValidator`
-3. `SelfieRuleValidator`
-4. `LocationRuleValidator`
-5. `OtpRuleValidator`
-6. `TimeRuleValidator`
-7. `FaceMatchRuleValidator`
-
-This ordering allows basic presence failures to surface before deeper semantic failures.
-
----
-
-## 6. Why this model is useful
-
-This contract model gives the package:
-
-- a clear separation of concerns
-- consistent redemption behavior
-- simpler debugging
-- easier extension for future validators
-- stable semantics for API consumers and host apps
+### flat handler output
+```php
+'inputs' => [
+    'transaction_id' => 'MOCK-KYC-123',
+    'status' => 'approved',
+    'id_number' => 'ABC123456',
+    'id_type' => 'National ID',
+]
+```
 
 ---
 
-## 7. Guidance for future validators
+## 6. Presence Rules in Practice
 
-When adding a new validator, decide first:
+### Required generic fields
+These pass when non-empty values are present:
+- `name`
+- `email`
+- `birth_date`
+- `address`
+- `mobile`
+- `reference_code`
+- `gross_monthly_income`
 
-### Is this a presence requirement?
-Then it belongs in `inputs.fields`
+### Required structured fields
+These pass when evidence is present:
+- `signature`
+- `selfie`
+- `otp`
+- `location`
+- `kyc`
 
-### Is this a rule about submitted evidence?
-Then it belongs in `validation.*`
-
-Examples:
-
-- “document must be submitted” → `inputs.fields`
-- “document must be approved” → `validation.document_*`
-- “otp must be submitted” → `inputs.fields`
-- “otp must be verified” → `validation.otp`
-- “selfie must be submitted” → `inputs.fields`
-- “face match must pass” → `validation.face_match`
-
----
-
-## 8. Recommended invariant
-
-Every field in `inputs.fields` must be present in submitted redemption evidence before redemption can succeed.
-
-This invariant should remain true even when no `validation.*` block is declared.
+### Edge-case rules already enforced
+- empty strings do not count as present
+- partial location payloads do not count as present
+- empty KYC arrays do not count as present
 
 ---
 
-## 9. Summary
+## 7. Semantic Rules in Practice
 
-The redemption contract model is:
+### OTP verification
+OTP may be present but still fail semantic verification if:
+- explicit `verified = false`
+- no verification metadata exists when `validation.otp.required = true`
 
-- **Presence** → `inputs.fields`
-- **Semantics** → `validation.*`
+The extractor also supports inferred verification from `verified_at` when no explicit flag is given.
 
-That is the core rule. Everything else should build on top of it.
+### Location radius
+Location may be present but still fail semantic validation if coordinates are outside the allowed radius.
+
+### Face match
+KYC may be present but face match may still fail if:
+- verification is false
+- face_match is false
+- confidence is below threshold
+
+### Time validation
+Redemption may fail when:
+- outside allowed time window
+- configured duration limit is exceeded
+
+---
+
+## 8. Invariant
+
+The key invariant is:
+
+> Every field declared in `inputs.fields` must be present in submitted redemption evidence before redemption can succeed.
+
+This remains true even when no `validation.*` block is defined.
+
+---
+
+## 9. Guidance for x-change and other host apps
+
+When building claim payloads:
+
+### Use `inputs.*` for collected step data
+This aligns naturally with form-flow manager and current extractor support.
+
+### Use `validation.*` only for explicit semantics
+Do not rely on implied validation behavior.
+
+### Do not assume `kyc` means face match
+Treat them as separate layers.
+
+### Allow the voucher package to normalize evidence
+The extractor is designed to bridge shape differences.
+
+---
+
+## 10. Summary
+
+The final mental model is:
+
+- **Collection requirement** → `inputs.fields`
+- **Evaluation requirement** → `validation.*`
+
+That distinction is now central to the package architecture and should guide all future host-app integrations.

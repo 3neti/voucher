@@ -532,3 +532,83 @@ it('does not infer face match semantics from flat kyc handler payload alone', fu
         ->and($evidence->face_match)->toBeNull()
         ->and($evidence->match_confidence)->toBeNull();
 });
+
+it('extracts generic inputs from redemption.inputs', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'redemption' => [
+            'inputs' => [
+                'name' => 'Juan Dela Cruz',
+                'email' => 'juan@example.com',
+                'birth_date' => '1990-01-01',
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->name)->toBe('Juan Dela Cruz')
+        ->and($evidence->email)->toBe('juan@example.com')
+        ->and($evidence->birth_date)->toBe('1990-01-01');
+});
+
+it('extracts otp from redemption.inputs.otp.otp_code', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'redemption' => [
+            'inputs' => [
+                'otp' => [
+                    'otp_code' => '123456',
+                    'verified_at' => '2026-04-19T10:30:00+08:00',
+                    'reference_id' => 'flow-abc123',
+                ],
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->otp)->toBe('123456')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->otp_verified_at)->not->toBeNull()
+        ->and($evidence->otp_verified_at?->toIso8601String())->toStartWith('2026-04-19T10:30:00');
+});
+
+it('prefers top-level inputs over redemption.inputs when both exist', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'name' => 'Top Level Name',
+            'email' => 'top@example.com',
+            'otp' => [
+                'otp_code' => '999999',
+                'verified_at' => '2026-04-19T11:45:00+08:00',
+            ],
+        ],
+        'redemption' => [
+            'inputs' => [
+                'name' => 'Nested Redemption Name',
+                'email' => 'nested@example.com',
+                'otp' => [
+                    'otp_code' => '123456',
+                    'verified_at' => '2026-04-19T10:30:00+08:00',
+                ],
+            ],
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->name)->toBe('Top Level Name')
+        ->and($evidence->email)->toBe('top@example.com')
+        ->and($evidence->otp)->toBe('999999')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->otp_verified_at)->not->toBeNull()
+        ->and($evidence->otp_verified_at?->toIso8601String())->toStartWith('2026-04-19T11:45:00');
+});

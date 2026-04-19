@@ -12,24 +12,33 @@ use LBHurtado\Voucher\Models\Voucher;
 
 class FaceMatchRuleValidator implements RedemptionRuleValidator
 {
+//    public function supports(Voucher $voucher): bool
+//    {
+//        $faceMatchRequired = (bool) $voucher->instructions?->validation?->face_match?->required;
+//
+//        $fields = collect($voucher->instructions?->inputs?->fields ?? [])
+//            ->map(function ($field) {
+//                if ($field instanceof VoucherInputField) {
+//                    return $field->value;
+//                }
+//
+//                return is_string($field) ? $field : null;
+//            })
+//            ->filter(fn ($value) => $value !== null)
+//            ->values();
+//
+//        $kycInputRequired = $fields->contains(VoucherInputField::KYC->value);
+//
+//        return $faceMatchRequired || $kycInputRequired;
+//    }
+//    public function supports(Voucher $voucher): bool
+//    {
+//        return $voucher->instructions?->validation?->face_match !== null;
+//    }
+
     public function supports(Voucher $voucher): bool
     {
-        $faceMatchRequired = (bool) $voucher->instructions?->validation?->face_match?->required;
-
-        $fields = collect($voucher->instructions?->inputs?->fields ?? [])
-            ->map(function ($field) {
-                if ($field instanceof VoucherInputField) {
-                    return $field->value;
-                }
-
-                return is_string($field) ? $field : null;
-            })
-            ->filter(fn ($value) => $value !== null)
-            ->values();
-
-        $kycInputRequired = $fields->contains(VoucherInputField::KYC->value);
-
-        return $faceMatchRequired || $kycInputRequired;
+        return (bool) $voucher->instructions?->validation?->face_match?->required;
     }
 
     public function validate(Voucher $voucher, RedemptionEvidenceData $evidence): array

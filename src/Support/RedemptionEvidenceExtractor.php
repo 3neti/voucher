@@ -139,6 +139,7 @@ class RedemptionEvidenceExtractor
                 $this->firstPresent(
                     Arr::get($redemption, 'kyc'),
                     Arr::get($inputs, 'kyc'),
+                    $this->extractFlatKycPayload($inputs),
                 )
             ),
 
@@ -285,5 +286,29 @@ class RedemptionEvidenceExtractor
         return is_array($value) && $value !== []
             ? $value
             : null;
+    }
+
+    protected function extractFlatKycPayload(array $inputs): ?array
+    {
+        $flat = [
+            'transaction_id' => Arr::get($inputs, 'transaction_id'),
+            'status' => Arr::get($inputs, 'status'),
+            'name' => Arr::get($inputs, 'name'),
+            'date_of_birth' => Arr::get($inputs, 'date_of_birth'),
+            'address' => Arr::get($inputs, 'address'),
+            'id_number' => Arr::get($inputs, 'id_number'),
+            'id_type' => Arr::get($inputs, 'id_type'),
+            'nationality' => Arr::get($inputs, 'nationality'),
+            'id_card_full' => Arr::get($inputs, 'id_card_full'),
+            'id_card_cropped' => Arr::get($inputs, 'id_card_cropped'),
+            'selfie' => Arr::get($inputs, 'selfie'),
+        ];
+
+        $filtered = array_filter(
+            $flat,
+            fn ($value) => $value !== null && $value !== ''
+        );
+
+        return $filtered === [] ? null : $filtered;
     }
 }

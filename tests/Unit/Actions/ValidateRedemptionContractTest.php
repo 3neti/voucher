@@ -1381,3 +1381,27 @@ it('prefers explicit verified false over verified_at inference in form-flow otp 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
         ->toBe('otp_not_verified');
 });
+
+it('passes when required kyc is supplied via flat kyc handler payload', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => ['kyc'],
+        ],
+    ]));
+
+    $contact = makeContactForRedemption();
+
+    attachInputsRedeemer($voucher, $contact, [
+        'transaction_id' => 'MOCK-KYC-123',
+        'status' => 'approved',
+        'name' => 'JUAN DELA CRUZ',
+        'id_number' => 'ABC123456',
+        'id_type' => 'National ID',
+    ]);
+
+    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+        ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
+
+    expect($result)->not->toBeNull()
+        ->and($result->code)->toBe($voucher->code);
+});

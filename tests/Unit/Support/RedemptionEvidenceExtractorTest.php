@@ -425,3 +425,110 @@ it('returns null otp verification when no verification flag or verified_at is pr
         ->and($evidence->otp_verified)->toBeNull()
         ->and($evidence->otp_verified_at)->toBeNull();
 });
+
+it('extracts signature from form-handler signature payload', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'signature' => 'data:image/png;base64,SIGNATURE_IMAGE',
+            'width' => 600,
+            'height' => 256,
+            'format' => 'image/png',
+            'timestamp' => '2026-04-19T12:00:00+08:00',
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->signature)->toBe('data:image/png;base64,SIGNATURE_IMAGE');
+});
+
+it('extracts selfie from form-handler selfie payload', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'selfie' => 'data:image/jpeg;base64,SELFIE_IMAGE',
+            'width' => 640,
+            'height' => 480,
+            'format' => 'image/jpeg',
+            'timestamp' => '2026-04-19T12:01:00+08:00',
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->selfie)->toBe('data:image/jpeg;base64,SELFIE_IMAGE');
+});
+
+it('extracts location from form-handler flat location payload', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'latitude' => 14.5995,
+            'longitude' => 121.0288,
+            'formatted_address' => 'Quezon City, Metro Manila, Philippines',
+            'accuracy' => 15,
+            'timestamp' => '2026-04-19T12:02:00+08:00',
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->latitude)->toBe(14.5995)
+        ->and($evidence->longitude)->toBe(121.0288);
+});
+
+it('extracts kyc presence from form-handler flat kyc payload', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'transaction_id' => 'MOCK-KYC-123',
+            'status' => 'approved',
+            'name' => 'JUAN DELA CRUZ',
+            'date_of_birth' => '1990-01-01',
+            'address' => '123 Main Street',
+            'id_number' => 'ABC123456',
+            'id_type' => 'National ID',
+            'nationality' => 'Filipino',
+            'id_card_full' => 'https://example.com/id-full.jpg',
+            'id_card_cropped' => 'https://example.com/id-cropped.jpg',
+            'selfie' => 'https://example.com/selfie.jpg',
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->kyc)->toBeArray()
+        ->and($evidence->kyc['transaction_id'])->toBe('MOCK-KYC-123')
+        ->and($evidence->kyc['status'])->toBe('approved')
+        ->and($evidence->kyc['id_number'])->toBe('ABC123456');
+});
+
+it('does not infer face match semantics from flat kyc handler payload alone', function () {
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    attachRedeemerMetadata($voucher, $contact, [
+        'inputs' => [
+            'transaction_id' => 'MOCK-KYC-123',
+            'status' => 'approved',
+            'name' => 'JUAN DELA CRUZ',
+            'id_number' => 'ABC123456',
+        ],
+    ]);
+
+    $evidence = app(RedemptionEvidenceExtractor::class)->extract($voucher);
+
+    expect($evidence->kyc)->toBeArray()
+        ->and($evidence->face_verification_verified)->toBeNull()
+        ->and($evidence->face_match)->toBeNull()
+        ->and($evidence->match_confidence)->toBeNull();
+});

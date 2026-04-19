@@ -9,7 +9,7 @@ beforeEach(function () {
     $this->setupSystemUser();
 });
 
-it('supports vouchers when kyc is required as an input field', function () {
+it('does not support vouchers when kyc is only required as an input field', function () {
     $voucher = issueVoucher(validVoucherInstructions(overrides: [
         'inputs' => [
             'fields' => [\LBHurtado\Voucher\Enums\VoucherInputField::KYC->value],
@@ -23,7 +23,19 @@ it('supports vouchers when kyc is required as an input field', function () {
             ->map(fn ($field) => $field instanceof \LBHurtado\Voucher\Enums\VoucherInputField ? $field->value : $field)
             ->contains('kyc')
     )->toBeTrue()
-        ->and($validator->supports($voucher))->toBeTrue();
+        ->and($validator->supports($voucher))->toBeFalse();
+});
+
+it('does not treat kyc input presence as face match validation requirement', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => [\LBHurtado\Voucher\Enums\VoucherInputField::KYC->value],
+        ],
+    ]));
+
+    $validator = app(FaceMatchRuleValidator::class);
+
+    expect($validator->supports($voucher))->toBeFalse();
 });
 
 it('supports vouchers with explicit face match validation', function () {

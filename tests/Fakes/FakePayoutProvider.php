@@ -2,19 +2,29 @@
 
 namespace LBHurtado\Voucher\Tests\Fakes;
 
+use Illuminate\Support\Str;
 use LBHurtado\EmiCore\Contracts\PayoutProvider;
 use LBHurtado\EmiCore\Data\PayoutRequestData;
 use LBHurtado\EmiCore\Data\PayoutResultData;
-use LBHurtado\EmiCore\Enums\SettlementRail;
 use LBHurtado\EmiCore\Enums\PayoutStatus;
-use Illuminate\Support\Str;
+use LBHurtado\EmiCore\Enums\SettlementRail;
 use RuntimeException;
 
 class FakePayoutProvider implements PayoutProvider
 {
     public ?PayoutRequestData $lastRequest = null;
+
     public int $disburseCallCount = 0;
+
     public int $checkStatusCallCount = 0;
+
+    public ?PayoutStatus $nextCheckStatus = null;
+
+    public ?string $nextCheckTransactionId = null;
+
+    public ?string $nextCheckUuid = null;
+
+    public ?string $nextCheckProvider = null;
 
     /**
      * @var array<int, PayoutRequestData>
@@ -22,9 +32,13 @@ class FakePayoutProvider implements PayoutProvider
     public array $requests = [];
 
     public PayoutStatus $nextStatus = PayoutStatus::PENDING;
+
     public ?string $nextTransactionId = null;
+
     public ?string $nextUuid = null;
+
     public ?string $nextProvider = 'fake';
+
     public ?\Throwable $nextException = null;
 
     /**
@@ -45,6 +59,10 @@ class FakePayoutProvider implements PayoutProvider
         $this->nextProvider = 'fake';
         $this->nextException = null;
         $this->shouldFail = false;
+        $this->nextCheckStatus = null;
+        $this->nextCheckTransactionId = null;
+        $this->nextCheckUuid = null;
+        $this->nextCheckProvider = null;
 
         return $this;
     }
@@ -125,16 +143,27 @@ class FakePayoutProvider implements PayoutProvider
         );
     }
 
+//    public function checkStatus(string $transactionId): PayoutResultData
+//    {
+//        $this->checkStatusCallCount++;
+//
+//        return new PayoutResultData(
+//            transaction_id: $transactionId,
+//            uuid: $this->nextUuid ?? Str::uuid()->toString(),
+//            status: $this->nextStatus,
+//            provider: $this->nextProvider ?? 'fake',
+//        );
+//    }
+
     public function checkStatus(string $transactionId): PayoutResultData
     {
         $this->checkStatusCallCount++;
 
-
         return new PayoutResultData(
-            transaction_id: $transactionId,
-            uuid: $this->nextUuid ?? Str::uuid()->toString(),
-            status: $this->nextStatus,
-            provider: $this->nextProvider ?? 'fake',
+            transaction_id: $this->nextCheckTransactionId ?? $transactionId,
+            uuid: $this->nextCheckUuid ?? $this->nextUuid ?? Str::uuid()->toString(),
+            status: $this->nextCheckStatus ?? $this->nextStatus,
+            provider: $this->nextCheckProvider ?? $this->nextProvider ?? 'fake',
         );
     }
 
@@ -161,5 +190,31 @@ class FakePayoutProvider implements PayoutProvider
         expect($this->lastRequest)->not->toBeNull();
 
         $assertion($this->lastRequest);
+    }
+
+    public function willResolveCheckStatusAsSuccessful(
+        ?string $transactionId = null,
+        ?string $uuid = null,
+        ?string $provider = 'fake'
+    ): self {
+        $this->nextCheckStatus = PayoutStatus::COMPLETED;
+        $this->nextCheckTransactionId = $transactionId;
+        $this->nextCheckUuid = $uuid;
+        $this->nextCheckProvider = $provider;
+
+        return $this;
+    }
+
+    public function willResolveCheckStatusAsFailed(
+        ?string $transactionId = null,
+        ?string $uuid = null,
+        ?string $provider = 'fake'
+    ): self {
+        $this->nextCheckStatus = PayoutStatus::FAILED;
+        $this->nextCheckTransactionId = $transactionId;
+        $this->nextCheckUuid = $uuid;
+        $this->nextCheckProvider = $provider;
+
+        return $this;
     }
 }

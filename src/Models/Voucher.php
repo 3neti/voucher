@@ -6,6 +6,7 @@ use FrittenKeeZ\Vouchers\Models\Redeemer;
 use FrittenKeeZ\Vouchers\Models\Voucher as BaseVoucher;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use LBHurtado\Cash\Models\Cash;
 use LBHurtado\Contact\Models\Contact;
@@ -152,9 +153,49 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
             && $this->getAttribute('processed_on') <= now();
     }
 
-    public function getInstructionsAttribute(): VoucherInstructionsData
+//    public function getInstructionsAttribute(): VoucherInstructionsData
+//    {
+//        return VoucherInstructionsData::from($this->metadata['instructions']);
+//    }
+
+    public function getInstructionsAttribute($value)
     {
-        return VoucherInstructionsData::from($this->metadata['instructions']);
+        $payload = $value;
+
+        if (is_string($payload)) {
+            $decoded = json_decode($payload, true);
+            $payload = is_array($decoded) ? $decoded : null;
+        }
+
+        if (! is_array($payload) || $payload === []) {
+            $payload = data_get($this->metadata, 'instructions', []);
+        }
+
+        if (! is_array($payload)) {
+            $payload = [];
+        }
+
+        $payload = array_replace_recursive([
+            'cash' => [],
+            'inputs' => [
+                'fields' => [],
+            ],
+            'feedback' => [
+                'email' => null,
+                'mobile' => null,
+                'webhook' => null,
+            ],
+            'rider' => [
+                'message' => null,
+                'url' => null,
+                'redirect_timeout' => null,
+                'splash' => null,
+                'splash_timeout' => null,
+                'og_source' => null,
+            ],
+        ], $payload);
+
+        return VoucherInstructionsData::from($payload);
     }
 
     public function getCashAttribute(): ?Cash
@@ -359,8 +400,11 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
 
         return (int) $this->cash->wallet->transactions()
             ->where('type', 'withdraw')
-            ->whereJsonContains('meta->flow', 'redeem')
             ->where('confirmed', true)
+            ->where(function ($query) {
+                $query->whereJsonContains('meta->flow', 'withdraw')
+                    ->orWhereJsonContains('meta->flow', 'redeem');
+            })
             ->count();
     }
 
@@ -393,5 +437,11 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
             && $this->hasRemainingSlices()
             && ! $this->isExpired()
             && $this->state === VoucherState::ACTIVE;
+    }
+
+    public function claims(): HasMany
+    {
+        return $this->hasMany(\LBHurtado\XChange\Models\VoucherClaim::class)
+            ->orderBy('claim_number');
     }
 }

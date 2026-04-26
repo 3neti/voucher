@@ -24,6 +24,8 @@ class CashInstructionData extends Data
         public ?int $slices = null,
         public ?int $max_slices = null,
         public ?float $min_withdrawal = null,
+        public ?string $type = null,
+        public ?array $mandates = [],
     ) {
         $this->applyRulesAndDefaults();
     }

@@ -43,9 +43,18 @@
             "dev-main": "1.x-dev"
         }
     },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/Users/rli/PhpstormProjects/packages/cash",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.2",
-        "3neti/cash": "^1.0",
+        "3neti/cash": "dev-main",
         "3neti/contact": "^1.0",
         "3neti/emi-core": "^1.0",
         "3neti/laravel-model-input": "^1.0",

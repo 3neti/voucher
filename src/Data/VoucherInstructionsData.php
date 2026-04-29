@@ -119,6 +119,9 @@ class VoucherInstructionsData extends Data
             'rules.allow_overpayment' => 'nullable|boolean',
             'rules.auto_close_on_full_payment' => 'nullable|boolean',
 
+            'metadata' => ['nullable', 'array'],
+            'metadata.flow_type' => ['nullable', 'string'],
+
             // Validation instructions
             'validation' => 'nullable|array',
             'validation.location' => 'nullable|array',
@@ -240,6 +243,7 @@ class VoucherInstructionsData extends Data
             'ttl' => $validated['ttl'] ?? null,
             'starts_at' => $validated['starts_at'] ?? null,
             'expires_at' => $validated['expires_at'] ?? null,
+            'metadata' => $validated['metadata'] ?? null,
             'voucher_type' => isset($validated['voucher_type']) ? VoucherType::from($validated['voucher_type']) : null,
             'target_amount' => $validated['target_amount'] ?? null,
             'rules' => $validated['rules'] ?? null,

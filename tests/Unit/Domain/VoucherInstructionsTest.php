@@ -69,3 +69,30 @@ it('preserves pricing and flags within instructions metadata', function () {
         ->and($cash['slice_mode'] ?? null)->toBe('open')
         ->and((float) ($cash['min_withdrawal'] ?? 0))->toBe(50.0);
 });
+
+it('preserves metadata flow_type through createFromAttribs and toCleanArray', function () {
+    $instructions = VoucherInstructionsData::createFromAttribs([
+        'cash' => [
+            'amount' => 100,
+            'currency' => 'PHP',
+            'validation' => [
+                'country' => 'PH',
+            ],
+        ],
+        'inputs' => [
+            'fields' => [],
+        ],
+        'feedback' => [],
+        'rider' => [],
+        'count' => 1,
+        'prefix' => 'PAY',
+        'mask' => '****',
+        'metadata' => [
+            'flow_type' => 'collectible',
+        ],
+    ]);
+
+    expect($instructions->metadata)->not->toBeNull()
+        ->and($instructions->metadata->flow_type)->toBe('collectible')
+        ->and(data_get($instructions->toCleanArray(), 'metadata.flow_type'))->toBe('collectible');
+});

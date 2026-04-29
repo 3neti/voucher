@@ -50,6 +50,8 @@ class VoucherMetadataData extends Data
         public ?bool $preview_enabled = null,    // null => default allow
         public ?string $preview_scope = null,    // 'full' | 'requirements_only' | 'none'
         public ?string $preview_message = null,  // optional issuer note
+
+        public ?string $flow_type = null,
     ) {}
 
     public static function rules(): array
@@ -79,6 +81,8 @@ class VoucherMetadataData extends Data
             'preview_enabled' => ['nullable', 'boolean'],
             'preview_scope' => ['nullable', 'in:full,requirements_only,none'],
             'preview_message' => ['nullable', 'string'],
+
+            'flow_type' => ['nullable', 'string'],
         ];
     }
 

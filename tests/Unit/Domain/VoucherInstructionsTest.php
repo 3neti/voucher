@@ -96,3 +96,36 @@ it('preserves metadata flow_type through createFromAttribs and toCleanArray', fu
         ->and($instructions->metadata->flow_type)->toBe('collectible')
         ->and(data_get($instructions->toCleanArray(), 'metadata.flow_type'))->toBe('collectible');
 });
+
+it('preserves collection wallet metadata through createFromAttribs and toCleanArray', function () {
+    $instructions = VoucherInstructionsData::createFromAttribs([
+        'cash' => [
+            'amount' => 0,
+            'currency' => 'PHP',
+            'validation' => [
+                'country' => 'PH',
+            ],
+        ],
+        'inputs' => [
+            'fields' => [],
+        ],
+        'feedback' => [],
+        'rider' => [],
+        'count' => 1,
+        'prefix' => 'PAY',
+        'mask' => '****',
+        'metadata' => [
+            'flow_type' => 'collectible',
+            'issuer_id' => '1',
+            'collection_wallet_id' => 123,
+        ],
+    ]);
+
+    expect($instructions->metadata)->not->toBeNull()
+        ->and($instructions->metadata->flow_type)->toBe('collectible')
+        ->and($instructions->metadata->issuer_id)->toBe('1')
+        ->and($instructions->metadata->collection_wallet_id)->toBe(123)
+        ->and(data_get($instructions->toCleanArray(), 'metadata.flow_type'))->toBe('collectible')
+        ->and(data_get($instructions->toCleanArray(), 'metadata.issuer_id'))->toBe('1')
+        ->and(data_get($instructions->toCleanArray(), 'metadata.collection_wallet_id'))->toBe(123);
+});

@@ -121,6 +121,8 @@ class VoucherInstructionsData extends Data
 
             'metadata' => ['nullable', 'array'],
             'metadata.flow_type' => ['nullable', 'string'],
+            'metadata.issuer_id' => ['nullable', 'string'],
+            'metadata.collection_wallet_id' => ['nullable'],
 
             // Validation instructions
             'validation' => 'nullable|array',

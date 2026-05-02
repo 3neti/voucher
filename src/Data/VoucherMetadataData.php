@@ -52,6 +52,8 @@ class VoucherMetadataData extends Data
         public ?string $preview_message = null,  // optional issuer note
 
         public ?string $flow_type = null,
+        public mixed $collection_wallet_id = null,
+
     ) {}
 
     public static function rules(): array
@@ -83,6 +85,7 @@ class VoucherMetadataData extends Data
             'preview_message' => ['nullable', 'string'],
 
             'flow_type' => ['nullable', 'string'],
+            'collection_wallet_id' => ['nullable'],
         ];
     }
 

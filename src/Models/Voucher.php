@@ -153,11 +153,6 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
             && $this->getAttribute('processed_on') <= now();
     }
 
-//    public function getInstructionsAttribute(): VoucherInstructionsData
-//    {
-//        return VoucherInstructionsData::from($this->metadata['instructions']);
-//    }
-
     public function getInstructionsAttribute($value)
     {
         $payload = $value;
@@ -191,6 +186,7 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
                 'redirect_timeout' => null,
                 'splash' => null,
                 'splash_timeout' => null,
+                'splash_meta' => null,
                 'og_source' => null,
             ],
         ], $payload);

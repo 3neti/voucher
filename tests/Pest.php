@@ -85,6 +85,7 @@ function validVoucherInstructions(
             'redirect_timeout' => null,
             'splash' => null,
             'splash_timeout' => null,
+            'splash_meta' => null,
             'og_source' => null,
         ],
         'count' => 1,

@@ -81,6 +81,9 @@ class VoucherInstructionsData extends Data
             'rider.redirect_timeout' => 'nullable|integer|min:0|max:300',
             'rider.splash' => 'nullable|string|max:51200',
             'rider.splash_timeout' => 'nullable|integer|min:0|max:60',
+            'rider.splash_meta' => 'nullable|array',
+            'rider.splash_meta.sanitized' => 'nullable|boolean',
+            'rider.splash_meta.html_profile' => 'nullable|string',
             'rider.og_source' => 'nullable|string|in:message,url,splash',
 
             'count' => 'required|integer|min:1',
@@ -199,6 +202,7 @@ class VoucherInstructionsData extends Data
                 'redirect_timeout' => $validated['rider']['redirect_timeout'] ?? null,
                 'splash' => $validated['rider']['splash'] ?? null,
                 'splash_timeout' => $validated['rider']['splash_timeout'] ?? null,
+                'splash_meta' => $validated['rider']['splash_meta'] ?? null,
                 'og_source' => $validated['rider']['og_source'] ?? null,
             ],
             'validation' => isset($validated['validation']) ? [
@@ -289,6 +293,7 @@ class VoucherInstructionsData extends Data
                 'redirect_timeout' => null,
                 'splash' => null,
                 'splash_timeout' => null,
+                'splash_meta' => null,
                 'og_source' => null,
             ],
             'validation' => [

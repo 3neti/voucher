@@ -129,3 +129,41 @@ it('preserves collection wallet metadata through createFromAttribs and toCleanAr
         ->and(data_get($instructions->toCleanArray(), 'metadata.issuer_id'))->toBe('1')
         ->and(data_get($instructions->toCleanArray(), 'metadata.collection_wallet_id'))->toBe(123);
 });
+
+it('preserves rider splash metadata through createFromAttribs and toCleanArray', function () {
+    $instructions = VoucherInstructionsData::createFromAttribs([
+        'cash' => [
+            'amount' => 100,
+            'currency' => 'PHP',
+            'validation' => [
+                'country' => 'PH',
+            ],
+        ],
+        'inputs' => [
+            'fields' => [],
+        ],
+        'feedback' => [],
+        'rider' => [
+            'splash' => '<strong>Hello</strong>',
+            'splash_timeout' => 3,
+            'splash_meta' => [
+                'sanitized' => true,
+                'html_profile' => 'rider_splash',
+            ],
+        ],
+        'count' => 1,
+        'prefix' => 'PAY',
+        'mask' => '****',
+    ]);
+
+    expect($instructions->rider->splash)->toBe('<strong>Hello</strong>')
+        ->and($instructions->rider->splash_timeout)->toBe(3)
+        ->and($instructions->rider->splash_meta)->toMatchArray([
+            'sanitized' => true,
+            'html_profile' => 'rider_splash',
+        ])
+        ->and(data_get($instructions->toCleanArray(), 'rider.splash_meta'))->toMatchArray([
+            'sanitized' => true,
+            'html_profile' => 'rider_splash',
+        ]);
+});

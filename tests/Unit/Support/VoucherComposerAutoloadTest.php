@@ -36,5 +36,7 @@ it('has no broken classmap or psr4 package classes', function () {
         ->and(class_exists(\LBHurtado\Voucher\Data\ExecutionInstructionData::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Data\ExecutionContextData::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Data\ExecutionResultData::class))->toBeTrue()
+        ->and(interface_exists(\LBHurtado\Voucher\Contracts\ExecutionDriverContract::class))->toBeTrue()
+        ->and(class_exists(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Services\ExecutionEngine::class))->toBeTrue();
 });

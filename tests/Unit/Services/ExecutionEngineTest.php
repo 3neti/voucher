@@ -1,7 +1,7 @@
 <?php
 
 use LBHurtado\Contact\Models\Contact;
-use LBHurtado\Voucher\Contracts\RedeemsVouchers;
+use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
@@ -53,20 +53,25 @@ it('resolves a driver key from execution instructions', function () {
     expect($engine->driverKeyFor($context))->toBe('default');
 });
 
-it('executes the compatibility redemption executor for the resolved driver key', function () {
-    $redeemer = new class implements RedeemsVouchers
+it('executes the default driver for the current compatibility path', function () {
+    $driver = new class implements ExecutionDriverContract
     {
         public array $calls = [];
 
-        public function handle(Contact $contact, string $voucher_code, array $meta = []): bool
+        public function key(): string
         {
-            $this->calls[] = compact('contact', 'voucher_code', 'meta');
+            return 'default';
+        }
 
-            return true;
+        public function execute(ExecutionContextData $context): ExecutionResultData
+        {
+            $this->calls[] = compact('context');
+
+            return ExecutionResultData::succeeded($this->key());
         }
     };
 
-    $engine = new ExecutionEngine($redeemer);
+    $engine = new ExecutionEngine($driver);
     $contact = new Contact(['mobile' => '+639171234567']);
 
     $result = $engine->execute(new ExecutionContextData(
@@ -80,22 +85,30 @@ it('executes the compatibility redemption executor for the resolved driver key',
         ->and($result->successful)->toBeTrue()
         ->and($result->status)->toBe('succeeded')
         ->and($result->driver)->toBe('default')
-        ->and($redeemer->calls)->toHaveCount(1)
-        ->and($redeemer->calls[0]['contact'])->toBe($contact)
-        ->and($redeemer->calls[0]['voucher_code'])->toBe('PAY-1234')
-        ->and($redeemer->calls[0]['meta'])->toBe(['bank_account' => 'BANK:123']);
+        ->and($driver->calls)->toHaveCount(1)
+        ->and($driver->calls[0]['context']->contact)->toBe($contact)
+        ->and($driver->calls[0]['context']->voucherCode)->toBe('PAY-1234')
+        ->and($driver->calls[0]['context']->meta)->toBe(['bank_account' => 'BANK:123']);
 });
 
-it('returns a failed execution result when compatibility redemption is rejected', function () {
-    $redeemer = new class implements RedeemsVouchers
+it('returns a failed execution result when default driver execution is rejected', function () {
+    $driver = new class implements ExecutionDriverContract
     {
-        public function handle(Contact $contact, string $voucher_code, array $meta = []): bool
+        public function key(): string
         {
-            return false;
+            return 'default';
+        }
+
+        public function execute(ExecutionContextData $context): ExecutionResultData
+        {
+            return ExecutionResultData::failed(
+                driver: $this->key(),
+                failure: 'compatibility_redemption_rejected',
+            );
         }
     };
 
-    $result = (new ExecutionEngine($redeemer))->execute(new ExecutionContextData(
+    $result = (new ExecutionEngine($driver))->execute(new ExecutionContextData(
         contact: new Contact(['mobile' => '+639171234567']),
         voucherCode: 'PAY-1234',
         instruction: ExecutionInstructionData::from(['driver' => 'default']),
@@ -115,15 +128,23 @@ it('records execution metadata without changing legacy behavior', function () {
 
     $beforeInstructions = $voucher->metadata['instructions'] ?? [];
 
-    $redeemer = new class implements RedeemsVouchers
+    $driver = new class implements ExecutionDriverContract
     {
-        public function handle(Contact $contact, string $voucher_code, array $meta = []): bool
+        public function key(): string
         {
-            return true;
+            return 'default';
+        }
+
+        public function execute(ExecutionContextData $context): ExecutionResultData
+        {
+            return ExecutionResultData::succeeded($this->key(), [
+                'voucher_code' => $context->voucherCode,
+                'driver' => $this->key(),
+            ]);
         }
     };
 
-    $result = (new ExecutionEngine($redeemer))->execute(ExecutionContextData::fromRedemption(
+    $result = (new ExecutionEngine($driver))->execute(ExecutionContextData::fromRedemption(
         voucher: $voucher,
         contact: new Contact(['mobile' => '+639171234567']),
         voucherCode: (string) $voucher->code,

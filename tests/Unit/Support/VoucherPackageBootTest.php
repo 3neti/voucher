@@ -21,6 +21,11 @@ it('resolves the compatibility execution engine from the container', function ()
         ->toBeInstanceOf(\LBHurtado\Voucher\Services\ExecutionEngine::class);
 });
 
+it('resolves the default execution driver from the container', function () {
+    expect(app(\LBHurtado\Voucher\Contracts\ExecutionDriverContract::class))
+        ->toBeInstanceOf(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class);
+});
+
 it('boots without provider packages installed', function () {
     expect(app(PayoutProvider::class))->toBeInstanceOf(PayoutProvider::class);
 });

@@ -7,8 +7,10 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Number;
 use LBHurtado\Voucher\Actions\GenerateVouchers;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
+use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Contracts\GeneratesVouchers;
 use LBHurtado\Voucher\Contracts\RedeemsVouchers;
+use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\RedemptionContractEngine;
 use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
 use LBHurtado\Voucher\Validators\FaceMatchRuleValidator;
@@ -45,6 +47,7 @@ class VoucherServiceProvider extends ServiceProvider
 
         $this->app->bind(GeneratesVouchers::class, GenerateVouchers::class);
         $this->app->bind(RedeemsVouchers::class, RedeemVoucher::class);
+        $this->app->bind(ExecutionDriverContract::class, DefaultExecutionDriver::class);
 
         $this->app->singleton(RedemptionEvidenceExtractor::class);
 

@@ -44,6 +44,7 @@ class VoucherInstructionsData extends Data
         public ?VoucherType $voucher_type = null, // Settlement voucher type (REDEEMABLE, PAYABLE, SETTLEMENT)
         public ?float $target_amount = null, // Target amount for PAYABLE/SETTLEMENT vouchers
         public ?array $rules = null,         // Settlement-specific rules (min_payment, max_payment, allow_overpayment, etc.)
+        public ?ExecutionInstructionData $execution = null,
     ) {
         $this->applyRulesAndDefaults();
         //        $this->ttl = $ttl ?: CarbonInterval::hours(config('instructions.ttl'));
@@ -121,6 +122,16 @@ class VoucherInstructionsData extends Data
             'rules.max_payment' => 'nullable|numeric|min:0',
             'rules.allow_overpayment' => 'nullable|boolean',
             'rules.auto_close_on_full_payment' => 'nullable|boolean',
+
+            'execution' => ['nullable', 'array'],
+            'execution.driver' => ['nullable', 'string', 'min:1'],
+            'execution.mode' => ['nullable', 'string', 'min:1'],
+            'execution.pipeline' => ['nullable', 'array'],
+            'execution.pipeline.*' => ['string', 'min:1'],
+            'execution.fallback' => ['nullable', 'string', 'min:1'],
+            'execution.visibility' => ['nullable', 'array'],
+            'execution.visibility.*' => ['string', 'min:1'],
+            'execution.metadata' => ['nullable', 'array'],
 
             'metadata' => ['nullable', 'array'],
             'metadata.flow_type' => ['nullable', 'string'],
@@ -253,6 +264,14 @@ class VoucherInstructionsData extends Data
             'voucher_type' => isset($validated['voucher_type']) ? VoucherType::from($validated['voucher_type']) : null,
             'target_amount' => $validated['target_amount'] ?? null,
             'rules' => $validated['rules'] ?? null,
+            'execution' => isset($validated['execution']) ? [
+                'driver' => $validated['execution']['driver'] ?? 'default',
+                'mode' => $validated['execution']['mode'] ?? null,
+                'pipeline' => $validated['execution']['pipeline'] ?? null,
+                'fallback' => $validated['execution']['fallback'] ?? null,
+                'visibility' => $validated['execution']['visibility'] ?? null,
+                'metadata' => $validated['execution']['metadata'] ?? null,
+            ] : null,
         ];
 
         return VoucherInstructionsData::from($data_array);
@@ -313,6 +332,11 @@ class VoucherInstructionsData extends Data
         ];
 
         return VoucherInstructionsData::from($data_array);
+    }
+
+    public function executionInstruction(): ExecutionInstructionData
+    {
+        return $this->execution ?? ExecutionInstructionData::from([]);
     }
 
     protected function rulesAndDefaults(): array

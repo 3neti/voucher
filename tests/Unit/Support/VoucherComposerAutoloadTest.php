@@ -32,5 +32,6 @@ it('exposes a discoverable service provider', function () {
 
 it('has no broken classmap or psr4 package classes', function () {
     expect(class_exists(\LBHurtado\Voucher\Models\Voucher::class))->toBeTrue()
-        ->and(class_exists(\LBHurtado\Voucher\Data\VoucherInstructionsData::class))->toBeTrue();
+        ->and(class_exists(\LBHurtado\Voucher\Data\VoucherInstructionsData::class))->toBeTrue()
+        ->and(class_exists(\LBHurtado\Voucher\Data\ExecutionInstructionData::class))->toBeTrue();
 });

@@ -1,6 +1,7 @@
 <?php
 
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
+use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
 
@@ -166,4 +167,34 @@ it('preserves rider splash metadata through createFromAttribs and toCleanArray',
             'sanitized' => true,
             'html_profile' => 'rider_splash',
         ]);
+});
+
+it('does not persist implicit default execution instructions into legacy voucher metadata', function () {
+    $voucher = issueVoucher(validVoucherInstructions(
+        amount: 100.00,
+        settlementRail: 'INSTAPAY',
+    ));
+
+    expect($voucher->instructions->execution)->toBeNull()
+        ->and($voucher->instructions->executionInstruction())->toBeInstanceOf(ExecutionInstructionData::class)
+        ->and($voucher->instructions->executionInstruction()->driver)->toBe('default')
+        ->and($voucher->metadata['instructions'] ?? [])->not->toHaveKey('execution');
+});
+
+it('persists explicit execution instructions into voucher metadata', function () {
+    $voucher = issueVoucher(validVoucherInstructions(
+        amount: 100.00,
+        settlementRail: 'INSTAPAY',
+        overrides: [
+            'execution' => [
+                'driver' => 'stored-value',
+                'metadata' => [
+                    'ledger' => 'beneficiary_wallet',
+                ],
+            ],
+        ],
+    ));
+
+    expect(data_get($voucher->metadata, 'instructions.execution.driver'))->toBe('stored-value')
+        ->and(data_get($voucher->metadata, 'instructions.execution.metadata.ledger'))->toBe('beneficiary_wallet');
 });

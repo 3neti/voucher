@@ -1,0 +1,31 @@
+<?php
+
+namespace LBHurtado\Voucher\Data;
+
+use Spatie\LaravelData\Data;
+
+class ExecutionInstructionData extends Data
+{
+    public function __construct(
+        public string $driver = 'default',
+        public ?string $mode = null,
+        public ?array $pipeline = null,
+        public ?string $fallback = null,
+        public ?array $visibility = null,
+        public ?array $metadata = null,
+    ) {}
+
+    public static function rules(): array
+    {
+        return [
+            'driver' => ['nullable', 'string', 'min:1'],
+            'mode' => ['nullable', 'string', 'min:1'],
+            'pipeline' => ['nullable', 'array'],
+            'pipeline.*' => ['string', 'min:1'],
+            'fallback' => ['nullable', 'string', 'min:1'],
+            'visibility' => ['nullable', 'array'],
+            'visibility.*' => ['string', 'min:1'],
+            'metadata' => ['nullable', 'array'],
+        ];
+    }
+}

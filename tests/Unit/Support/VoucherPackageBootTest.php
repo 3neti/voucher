@@ -16,6 +16,11 @@ it('resolves core voucher actions from the container', function () {
         ->toBeInstanceOf(\LBHurtado\Voucher\Actions\GenerateVouchers::class);
 });
 
+it('resolves the compatibility execution engine from the container', function () {
+    expect(app(\LBHurtado\Voucher\Services\ExecutionEngine::class))
+        ->toBeInstanceOf(\LBHurtado\Voucher\Services\ExecutionEngine::class);
+});
+
 it('boots without provider packages installed', function () {
     expect(app(PayoutProvider::class))->toBeInstanceOf(PayoutProvider::class);
 });

@@ -6,10 +6,11 @@ use FrittenKeeZ\Vouchers\Exceptions\VoucherNotFoundException;
 use FrittenKeeZ\Vouchers\Facades\Vouchers;
 use Illuminate\Support\Facades\Log;
 use LBHurtado\Contact\Models\Contact;
+use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use Lorisleiva\Actions\Concerns\AsAction;
 use Throwable;
 
-class RedeemVoucher
+class RedeemVoucher implements RedeemsVouchers
 {
     use AsAction;
 

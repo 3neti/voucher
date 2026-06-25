@@ -9,12 +9,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
+use LBHurtado\Voucher\Contracts\GeneratesVouchers;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Data\VoucherMetadataData;
 use LBHurtado\Voucher\Events\VouchersGenerated;
 use Lorisleiva\Actions\Concerns\AsAction;
 
-class GenerateVouchers
+class GenerateVouchers implements GeneratesVouchers
 {
     use AsAction;
 

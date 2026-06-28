@@ -26,6 +26,14 @@ it('resolves the default execution driver from the container', function () {
         ->toBeInstanceOf(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class);
 });
 
+it('resolves the singleton execution driver registry from the container', function () {
+    $registry = app(\LBHurtado\Voucher\Services\ExecutionDriverRegistry::class);
+
+    expect($registry)->toBe(app(\LBHurtado\Voucher\Services\ExecutionDriverRegistry::class))
+        ->and($registry->resolve('default'))
+        ->toBeInstanceOf(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class);
+});
+
 it('boots without provider packages installed', function () {
     expect(app(PayoutProvider::class))->toBeInstanceOf(PayoutProvider::class);
 });

@@ -7,6 +7,7 @@ use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
+use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;
 
 beforeEach(function () {
@@ -53,7 +54,10 @@ it('delegates execution to the default driver', function () {
         }
     };
 
-    $engine = new ExecutionEngine($driver);
+    $registry = new ExecutionDriverRegistry(app());
+    $registry->register('default', $driver);
+
+    $engine = new ExecutionEngine($registry);
     $contact = new Contact(['mobile' => '+639171234567']);
 
     $result = $engine->execute(new ExecutionContextData(
@@ -88,7 +92,7 @@ it('routes redeem voucher action through the execution engine and default driver
         }
     };
 
-    app()->instance(ExecutionDriverContract::class, $driver);
+    app(ExecutionDriverRegistry::class)->register('default', $driver);
 
     $contact = new Contact(['mobile' => '+639171234567']);
 

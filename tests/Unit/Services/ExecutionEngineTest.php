@@ -6,6 +6,7 @@ use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
 use LBHurtado\Voucher\Models\Voucher;
+use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;
 
 beforeEach(function () {
@@ -71,7 +72,10 @@ it('executes the default driver for the current compatibility path', function ()
         }
     };
 
-    $engine = new ExecutionEngine($driver);
+    $registry = new ExecutionDriverRegistry(app());
+    $registry->register('default', $driver);
+
+    $engine = new ExecutionEngine($registry);
     $contact = new Contact(['mobile' => '+639171234567']);
 
     $result = $engine->execute(new ExecutionContextData(
@@ -108,7 +112,10 @@ it('returns a failed execution result when default driver execution is rejected'
         }
     };
 
-    $result = (new ExecutionEngine($driver))->execute(new ExecutionContextData(
+    $registry = new ExecutionDriverRegistry(app());
+    $registry->register('default', $driver);
+
+    $result = (new ExecutionEngine($registry))->execute(new ExecutionContextData(
         contact: new Contact(['mobile' => '+639171234567']),
         voucherCode: 'PAY-1234',
         instruction: ExecutionInstructionData::from(['driver' => 'default']),
@@ -144,7 +151,10 @@ it('records execution metadata without changing legacy behavior', function () {
         }
     };
 
-    $result = (new ExecutionEngine($driver))->execute(ExecutionContextData::fromRedemption(
+    $registry = new ExecutionDriverRegistry(app());
+    $registry->register('default', $driver);
+
+    $result = (new ExecutionEngine($registry))->execute(ExecutionContextData::fromRedemption(
         voucher: $voucher,
         contact: new Contact(['mobile' => '+639171234567']),
         voucherCode: (string) $voucher->code,

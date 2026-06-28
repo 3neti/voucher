@@ -11,6 +11,7 @@ use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Contracts\GeneratesVouchers;
 use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
+use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\RedemptionContractEngine;
 use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
 use LBHurtado\Voucher\Validators\FaceMatchRuleValidator;
@@ -48,6 +49,10 @@ class VoucherServiceProvider extends ServiceProvider
         $this->app->bind(GeneratesVouchers::class, GenerateVouchers::class);
         $this->app->bind(RedeemsVouchers::class, RedeemVoucher::class);
         $this->app->bind(ExecutionDriverContract::class, DefaultExecutionDriver::class);
+        $this->app->singleton(ExecutionDriverRegistry::class, function ($app) {
+            return (new ExecutionDriverRegistry($app))
+                ->register('default', DefaultExecutionDriver::class);
+        });
 
         $this->app->singleton(RedemptionEvidenceExtractor::class);
 

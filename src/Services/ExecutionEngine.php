@@ -2,14 +2,13 @@
 
 namespace LBHurtado\Voucher\Services;
 
-use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
 
 class ExecutionEngine
 {
     public function __construct(
-        private readonly ExecutionDriverContract $defaultDriver,
+        private readonly ExecutionDriverRegistry $drivers,
     ) {}
 
     public function driverKeyFor(ExecutionContextData $context): string
@@ -19,6 +18,8 @@ class ExecutionEngine
 
     public function execute(ExecutionContextData $context): ExecutionResultData
     {
-        return $this->defaultDriver->execute($context);
+        return $this->drivers
+            ->resolve($this->driverKeyFor($context))
+            ->execute($context);
     }
 }

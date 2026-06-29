@@ -10,6 +10,7 @@ use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;
 use LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver;
+use LBHurtado\Voucher\Services\StoredValueExecutionDriver;
 
 beforeEach(function () {
     $this->setupSystemUser();
@@ -42,7 +43,7 @@ it('resolves the default driver by key from the package singleton registry', fun
 
     expect($registry)->toBe(app(ExecutionDriverRegistry::class))
         ->and($registry->has('default'))->toBeTrue()
-        ->and($registry->keys())->toBe(['default', 'settlement_envelope'])
+        ->and($registry->keys())->toBe(['default', 'settlement_envelope', 'stored_value'])
         ->and($registry->resolve('default'))->toBeInstanceOf(DefaultExecutionDriver::class);
 });
 
@@ -51,6 +52,13 @@ it('resolves the settlement envelope driver by key from the package singleton re
 
     expect($registry->has('settlement_envelope'))->toBeTrue()
         ->and($registry->resolve('settlement_envelope'))->toBeInstanceOf(SettlementEnvelopeExecutionDriver::class);
+});
+
+it('resolves the stored value driver by key from the package singleton registry', function () {
+    $registry = app(ExecutionDriverRegistry::class);
+
+    expect($registry->has('stored_value'))->toBeTrue()
+        ->and($registry->resolve('stored_value'))->toBeInstanceOf(StoredValueExecutionDriver::class);
 });
 
 it('throws a clear exception for unknown execution drivers', function () {

@@ -11,11 +11,14 @@ use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Contracts\GeneratesVouchers;
 use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway;
+use LBHurtado\Voucher\Contracts\StoredValueExecutionGateway;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\NullSettlementEnvelopeExecutionGateway;
+use LBHurtado\Voucher\Services\NullStoredValueExecutionGateway;
 use LBHurtado\Voucher\Services\RedemptionContractEngine;
 use LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver;
+use LBHurtado\Voucher\Services\StoredValueExecutionDriver;
 use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
 use LBHurtado\Voucher\Validators\FaceMatchRuleValidator;
 use LBHurtado\Voucher\Validators\LocationRuleValidator;
@@ -53,10 +56,12 @@ class VoucherServiceProvider extends ServiceProvider
         $this->app->bind(RedeemsVouchers::class, RedeemVoucher::class);
         $this->app->bind(ExecutionDriverContract::class, DefaultExecutionDriver::class);
         $this->app->bind(SettlementEnvelopeExecutionGateway::class, NullSettlementEnvelopeExecutionGateway::class);
+        $this->app->bind(StoredValueExecutionGateway::class, NullStoredValueExecutionGateway::class);
         $this->app->singleton(ExecutionDriverRegistry::class, function ($app) {
             return (new ExecutionDriverRegistry($app))
                 ->register('default', DefaultExecutionDriver::class)
-                ->register('settlement_envelope', SettlementEnvelopeExecutionDriver::class);
+                ->register('settlement_envelope', SettlementEnvelopeExecutionDriver::class)
+                ->register('stored_value', StoredValueExecutionDriver::class);
         });
 
         $this->app->singleton(RedemptionEvidenceExtractor::class);

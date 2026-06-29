@@ -22,9 +22,12 @@ it('the execution engine resolves drivers only through the registry', function (
 });
 
 it('keeps the built-in execution driver list explicit', function () {
-    expect(app(ExecutionDriverRegistry::class)->keys())->toBe(['default', 'settlement_envelope']);
+    expect(app(ExecutionDriverRegistry::class)->keys())->toBe(['default', 'settlement_envelope', 'stored_value']);
 });
 
-it('does not scaffold stored-value execution before its authorized slice', function () {
-    expect(class_exists('LBHurtado\\Voucher\\Services\\StoredValueExecutionDriver'))->toBeFalse();
+it('keeps stored-value execution behind the driver gateway seam', function () {
+    expect(class_exists('LBHurtado\\Voucher\\Services\\StoredValueExecutionDriver'))->toBeTrue()
+        ->and(interface_exists('LBHurtado\\Voucher\\Contracts\\StoredValueExecutionGateway'))->toBeTrue()
+        ->and(class_exists('LBHurtado\\Voucher\\Services\\StoredValueVoucher'))->toBeFalse()
+        ->and(class_exists('LBHurtado\\Voucher\\Models\\StoredValueVoucher'))->toBeFalse();
 });

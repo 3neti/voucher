@@ -38,11 +38,16 @@ it('has no broken classmap or psr4 package classes', function () {
         ->and(class_exists(\LBHurtado\Voucher\Data\ExecutionResultData::class))->toBeTrue()
         ->and(interface_exists(\LBHurtado\Voucher\Contracts\ExecutionDriverContract::class))->toBeTrue()
         ->and(interface_exists(\LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway::class))->toBeTrue()
+        ->and(interface_exists(\LBHurtado\Voucher\Contracts\StoredValueExecutionGateway::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Exceptions\UnknownExecutionDriverException::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Exceptions\SettlementEnvelopeNotReadyException::class))->toBeTrue()
+        ->and(class_exists(\LBHurtado\Voucher\Exceptions\StoredValueSpendRejectedException::class))->toBeTrue()
+        ->and(class_exists(\LBHurtado\Voucher\Exceptions\StoredValueSpendRequiresOtpException::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Services\ExecutionDriverRegistry::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Services\ExecutionEngine::class))->toBeTrue()
         ->and(class_exists(\LBHurtado\Voucher\Services\NullSettlementEnvelopeExecutionGateway::class))->toBeTrue()
-        ->and(class_exists(\LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver::class))->toBeTrue();
+        ->and(class_exists(\LBHurtado\Voucher\Services\NullStoredValueExecutionGateway::class))->toBeTrue()
+        ->and(class_exists(\LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver::class))->toBeTrue()
+        ->and(class_exists(\LBHurtado\Voucher\Services\StoredValueExecutionDriver::class))->toBeTrue();
 });

@@ -21,11 +21,10 @@ it('the execution engine resolves drivers only through the registry', function (
         ->and(preg_match('/\bmatch\s*\(/', $source))->toBe(0);
 });
 
-it('keeps only the default driver registered by the voucher package initially', function () {
-    expect(app(ExecutionDriverRegistry::class)->keys())->toBe(['default']);
+it('keeps the built-in execution driver list explicit', function () {
+    expect(app(ExecutionDriverRegistry::class)->keys())->toBe(['default', 'settlement_envelope']);
 });
 
-it('does not scaffold later slice execution drivers during stabilization', function () {
-    expect(class_exists('LBHurtado\\Voucher\\Services\\SettlementEnvelopeExecutionDriver'))->toBeFalse()
-        ->and(class_exists('LBHurtado\\Voucher\\Services\\StoredValueExecutionDriver'))->toBeFalse();
+it('does not scaffold stored-value execution before its authorized slice', function () {
+    expect(class_exists('LBHurtado\\Voucher\\Services\\StoredValueExecutionDriver'))->toBeFalse();
 });

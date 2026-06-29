@@ -9,6 +9,7 @@ use LBHurtado\Voucher\Exceptions\UnknownExecutionDriverException;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;
+use LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver;
 
 beforeEach(function () {
     $this->setupSystemUser();
@@ -41,8 +42,15 @@ it('resolves the default driver by key from the package singleton registry', fun
 
     expect($registry)->toBe(app(ExecutionDriverRegistry::class))
         ->and($registry->has('default'))->toBeTrue()
-        ->and($registry->keys())->toBe(['default'])
+        ->and($registry->keys())->toBe(['default', 'settlement_envelope'])
         ->and($registry->resolve('default'))->toBeInstanceOf(DefaultExecutionDriver::class);
+});
+
+it('resolves the settlement envelope driver by key from the package singleton registry', function () {
+    $registry = app(ExecutionDriverRegistry::class);
+
+    expect($registry->has('settlement_envelope'))->toBeTrue()
+        ->and($registry->resolve('settlement_envelope'))->toBeInstanceOf(SettlementEnvelopeExecutionDriver::class);
 });
 
 it('throws a clear exception for unknown execution drivers', function () {
@@ -120,4 +128,3 @@ it('allows package consumers to extend driver registrations', function () {
         ->and($result->driver)->toBe('package_extension')
         ->and($result->metadata['voucher_code'])->toBe('PAY-1234');
 });
-

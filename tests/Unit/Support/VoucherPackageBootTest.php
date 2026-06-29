@@ -31,7 +31,14 @@ it('resolves the singleton execution driver registry from the container', functi
 
     expect($registry)->toBe(app(\LBHurtado\Voucher\Services\ExecutionDriverRegistry::class))
         ->and($registry->resolve('default'))
-        ->toBeInstanceOf(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class);
+        ->toBeInstanceOf(\LBHurtado\Voucher\Services\DefaultExecutionDriver::class)
+        ->and($registry->resolve('settlement_envelope'))
+        ->toBeInstanceOf(\LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver::class);
+});
+
+it('resolves the settlement envelope execution gateway seam from the container', function () {
+    expect(app(\LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway::class))
+        ->toBeInstanceOf(\LBHurtado\Voucher\Services\NullSettlementEnvelopeExecutionGateway::class);
 });
 
 it('boots without provider packages installed', function () {

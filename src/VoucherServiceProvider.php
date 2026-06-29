@@ -14,6 +14,8 @@ use LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway;
 use LBHurtado\Voucher\Contracts\StoredValueExecutionGateway;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
+use LBHurtado\Voucher\Services\ExecutionPipelineRuntime;
+use LBHurtado\Voucher\Services\ExecutionPipelineStepRegistry;
 use LBHurtado\Voucher\Services\NullSettlementEnvelopeExecutionGateway;
 use LBHurtado\Voucher\Services\NullStoredValueExecutionGateway;
 use LBHurtado\Voucher\Services\RedemptionContractEngine;
@@ -57,6 +59,8 @@ class VoucherServiceProvider extends ServiceProvider
         $this->app->bind(ExecutionDriverContract::class, DefaultExecutionDriver::class);
         $this->app->bind(SettlementEnvelopeExecutionGateway::class, NullSettlementEnvelopeExecutionGateway::class);
         $this->app->bind(StoredValueExecutionGateway::class, NullStoredValueExecutionGateway::class);
+        $this->app->singleton(ExecutionPipelineStepRegistry::class, fn ($app) => new ExecutionPipelineStepRegistry($app));
+        $this->app->singleton(ExecutionPipelineRuntime::class);
         $this->app->singleton(ExecutionDriverRegistry::class, function ($app) {
             return (new ExecutionDriverRegistry($app))
                 ->register('default', DefaultExecutionDriver::class)

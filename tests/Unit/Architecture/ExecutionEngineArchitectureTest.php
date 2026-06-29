@@ -21,6 +21,14 @@ it('the execution engine resolves drivers only through the registry', function (
         ->and(preg_match('/\bmatch\s*\(/', $source))->toBe(0);
 });
 
+it('keeps driver-composed pipelines out of the central execution engine', function () {
+    $source = file_get_contents(__DIR__.'/../../../src/Services/ExecutionEngine.php');
+
+    expect($source)->not->toContain('ExecutionPipelineRuntime')
+        ->and($source)->not->toContain('ExecutionPipelineStepRegistry')
+        ->and($source)->not->toContain('pipeline');
+});
+
 it('keeps the built-in execution driver list explicit', function () {
     expect(app(ExecutionDriverRegistry::class)->keys())->toBe(['default', 'settlement_envelope', 'stored_value']);
 });

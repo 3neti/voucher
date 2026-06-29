@@ -38,6 +38,13 @@ it('resolves the singleton execution driver registry from the container', functi
         ->toBeInstanceOf(\LBHurtado\Voucher\Services\StoredValueExecutionDriver::class);
 });
 
+it('resolves the singleton execution pipeline runtime and step registry from the container', function () {
+    expect(app(\LBHurtado\Voucher\Services\ExecutionPipelineStepRegistry::class))
+        ->toBe(app(\LBHurtado\Voucher\Services\ExecutionPipelineStepRegistry::class))
+        ->and(app(\LBHurtado\Voucher\Services\ExecutionPipelineRuntime::class))
+        ->toBe(app(\LBHurtado\Voucher\Services\ExecutionPipelineRuntime::class));
+});
+
 it('resolves the settlement envelope execution gateway seam from the container', function () {
     expect(app(\LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway::class))
         ->toBeInstanceOf(\LBHurtado\Voucher\Services\NullSettlementEnvelopeExecutionGateway::class);

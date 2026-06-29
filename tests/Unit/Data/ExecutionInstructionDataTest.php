@@ -24,6 +24,7 @@ it('creates a default execution instruction when no execution block is provided'
 
     expect($instructions->execution)->toBeNull()
         ->and($instructions->executionInstruction())->toBeInstanceOf(ExecutionInstructionData::class)
+        ->and($instructions->executionInstruction()->schema)->toBe('voucher.execution.v1')
         ->and($instructions->executionInstruction()->driver)->toBe('default')
         ->and($instructions->toCleanArray())->not->toHaveKey('execution');
 });
@@ -58,6 +59,7 @@ it('hydrates execution instructions from voucher instructions', function () {
     ]);
 
     expect($instructions->execution)->toBeInstanceOf(ExecutionInstructionData::class)
+        ->and($instructions->executionInstruction()->schema)->toBe('voucher.execution.v1')
         ->and($instructions->executionInstruction()->driver)->toBe('settlement-envelope')
         ->and($instructions->executionInstruction()->mode)->toBe('authorization-gated')
         ->and($instructions->executionInstruction()->pipeline)->toBe(['validate', 'authorize'])
@@ -71,7 +73,8 @@ it('hydrates execution instructions from voucher instructions', function () {
 it('defaults the execution driver to default', function () {
     $instruction = ExecutionInstructionData::from([]);
 
-    expect($instruction->driver)->toBe('default')
+    expect($instruction->schema)->toBe('voucher.execution.v1')
+        ->and($instruction->driver)->toBe('default')
         ->and($instruction->mode)->toBeNull()
         ->and($instruction->pipeline)->toBeNull()
         ->and($instruction->fallback)->toBeNull()
@@ -105,7 +108,18 @@ it('preserves legacy voucher instruction hydration', function () {
         ->and($instructions->cash->currency)->toBe('PHP')
         ->and($instructions->metadata?->flow_type)->toBe('disbursable')
         ->and($instructions->execution)->toBeNull()
+        ->and($instructions->executionInstruction()->schema)->toBe('voucher.execution.v1')
         ->and($instructions->executionInstruction()->driver)->toBe('default');
+});
+
+it('preserves explicit execution schema versions', function () {
+    $instruction = ExecutionInstructionData::from([
+        'schema' => 'voucher.execution.v1',
+        'driver' => 'default',
+    ]);
+
+    expect($instruction->schema)->toBe('voucher.execution.v1')
+        ->and($instruction->driver)->toBe('default');
 });
 
 it('serializes execution instructions into voucher instruction payloads', function () {
@@ -133,6 +147,7 @@ it('serializes execution instructions into voucher instruction payloads', functi
         ],
     ]);
 
-    expect(data_get($instructions->toCleanArray(), 'execution.driver'))->toBe('stored-value')
+    expect(data_get($instructions->toCleanArray(), 'execution.schema'))->toBe('voucher.execution.v1')
+        ->and(data_get($instructions->toCleanArray(), 'execution.driver'))->toBe('stored-value')
         ->and(data_get($instructions->toCleanArray(), 'execution.metadata.ledger'))->toBe('beneficiary_wallet');
 });

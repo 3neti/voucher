@@ -124,6 +124,7 @@ class VoucherInstructionsData extends Data
             'rules.auto_close_on_full_payment' => 'nullable|boolean',
 
             'execution' => ['nullable', 'array'],
+            'execution.schema' => ['nullable', 'string', 'min:1'],
             'execution.driver' => ['nullable', 'string', 'min:1'],
             'execution.mode' => ['nullable', 'string', 'min:1'],
             'execution.pipeline' => ['nullable', 'array'],
@@ -265,6 +266,7 @@ class VoucherInstructionsData extends Data
             'target_amount' => $validated['target_amount'] ?? null,
             'rules' => $validated['rules'] ?? null,
             'execution' => isset($validated['execution']) ? [
+                'schema' => $validated['execution']['schema'] ?? ExecutionInstructionData::SCHEMA,
                 'driver' => $validated['execution']['driver'] ?? 'default',
                 'mode' => $validated['execution']['mode'] ?? null,
                 'pipeline' => $validated['execution']['pipeline'] ?? null,

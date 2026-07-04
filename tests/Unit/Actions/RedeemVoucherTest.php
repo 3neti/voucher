@@ -5,7 +5,12 @@ use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
 use FrittenKeeZ\Vouchers\Facades\Vouchers;
+use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
+use LBHurtado\Voucher\Data\ExecutionContextData;
+use LBHurtado\Voucher\Data\ExecutionResultData;
+use LBHurtado\Voucher\Exceptions\UnknownExecutionDriverException;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract;
+use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 
 uses(RefreshDatabase::class);
 
@@ -131,3 +136,103 @@ it('rethrows unexpected exceptions', function () {
     expect(fn () => RedeemVoucher::run($contact, 'ANY-CODE'))
         ->toThrow(RuntimeException::class, 'Unexpected failure');
 });
+
+it('hydrates an explicit default execution instruction through the public redemption path', function () {
+    $driver = new RecordingExecutionDriver('default');
+    app(ExecutionDriverRegistry::class)->register('default', $driver);
+
+    $voucher = issueVoucherWithExecutionDriver('default');
+    $contact = makeContactForRedemption();
+
+    expect(app(\LBHurtado\Voucher\Contracts\RedeemsVouchers::class)->handle($contact, $voucher->code, ['channel' => 'sms']))
+        ->toBeTrue()
+        ->and($driver->contexts)->toHaveCount(1)
+        ->and($driver->contexts[0]->voucher?->is($voucher))->toBeTrue()
+        ->and($driver->contexts[0]->voucherCode)->toBe((string) $voucher->code)
+        ->and($driver->contexts[0]->meta)->toBe(['channel' => 'sms'])
+        ->and($driver->contexts[0]->instruction?->driver)->toBe('default');
+});
+
+it('hydrates a settlement envelope execution instruction through the public redemption path', function () {
+    $driver = new RecordingExecutionDriver('settlement_envelope');
+    app(ExecutionDriverRegistry::class)->register('settlement_envelope', $driver);
+
+    $voucher = issueVoucherWithExecutionDriver('settlement_envelope');
+    $contact = makeContactForRedemption();
+
+    expect(RedeemVoucher::run($contact, $voucher->code))->toBeTrue()
+        ->and($driver->contexts)->toHaveCount(1)
+        ->and($driver->contexts[0]->voucher?->is($voucher))->toBeTrue()
+        ->and($driver->contexts[0]->instruction?->driver)->toBe('settlement_envelope');
+});
+
+it('hydrates a stored value execution instruction through the public redemption path', function () {
+    $driver = new RecordingExecutionDriver('stored_value');
+    app(ExecutionDriverRegistry::class)->register('stored_value', $driver);
+
+    $voucher = issueVoucherWithExecutionDriver('stored_value');
+    $contact = makeContactForRedemption();
+
+    expect(RedeemVoucher::run($contact, $voucher->code))->toBeTrue()
+        ->and($driver->contexts)->toHaveCount(1)
+        ->and($driver->contexts[0]->voucher?->is($voucher))->toBeTrue()
+        ->and($driver->contexts[0]->instruction?->driver)->toBe('stored_value');
+});
+
+it('fails closed for an unknown explicit execution driver through the public redemption path', function () {
+    $defaultDriver = new RecordingExecutionDriver('default');
+    app(ExecutionDriverRegistry::class)->register('default', $defaultDriver);
+
+    $voucher = issueVoucherWithExecutionDriver('imaginary_driver');
+    $contact = makeContactForRedemption();
+
+    expect(fn () => RedeemVoucher::run($contact, $voucher->code))
+        ->toThrow(UnknownExecutionDriverException::class, 'Unknown execution driver [imaginary_driver].')
+        ->and($defaultDriver->contexts)->toHaveCount(0);
+});
+
+it('keeps legacy vouchers without execution instructions on the default public redemption path', function () {
+    $driver = new RecordingExecutionDriver('default');
+    app(ExecutionDriverRegistry::class)->register('default', $driver);
+
+    $voucher = issueVoucher();
+    $contact = makeContactForRedemption();
+
+    expect(RedeemVoucher::run($contact, $voucher->code))->toBeTrue()
+        ->and($driver->contexts)->toHaveCount(1)
+        ->and($driver->contexts[0]->voucher?->is($voucher))->toBeTrue()
+        ->and($driver->contexts[0]->instruction?->driver)->toBe('default');
+});
+
+function issueVoucherWithExecutionDriver(string $driver)
+{
+    return issueVoucher(validVoucherInstructions(overrides: [
+        'execution' => [
+            'driver' => $driver,
+        ],
+    ]));
+}
+
+class RecordingExecutionDriver implements ExecutionDriverContract
+{
+    /**
+     * @var array<int, ExecutionContextData>
+     */
+    public array $contexts = [];
+
+    public function __construct(
+        private readonly string $key,
+    ) {}
+
+    public function key(): string
+    {
+        return $this->key;
+    }
+
+    public function execute(ExecutionContextData $context): ExecutionResultData
+    {
+        $this->contexts[] = $context;
+
+        return ExecutionResultData::succeeded($this->key);
+    }
+}

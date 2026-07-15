@@ -2,6 +2,7 @@
 
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
+use LBHurtado\Voucher\Exceptions\UnsupportedExecutionInstructionSchemaException;
 
 it('creates a default execution instruction when no execution block is provided', function () {
     $instructions = VoucherInstructionsData::createFromAttribs([
@@ -121,6 +122,13 @@ it('preserves explicit execution schema versions', function () {
     expect($instruction->schema)->toBe('voucher.execution.v1')
         ->and($instruction->driver)->toBe('default');
 });
+
+it('rejects unsupported explicit execution schema versions', function () {
+    ExecutionInstructionData::from([
+        'schema' => 'voucher.execution.v2',
+        'driver' => 'default',
+    ]);
+})->throws(UnsupportedExecutionInstructionSchemaException::class, 'Unsupported execution instruction schema [voucher.execution.v2].');
 
 it('serializes execution instructions into voucher instruction payloads', function () {
     $instructions = VoucherInstructionsData::createFromAttribs([

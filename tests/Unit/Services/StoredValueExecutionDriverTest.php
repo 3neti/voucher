@@ -25,6 +25,39 @@ it('activates stored value ownership on redemption', function () {
         ->and($gateway->calls)->toBe(['activate']);
 });
 
+it('accepts canonical nested stored value metadata', function () {
+    $gateway = new FakeStoredValueGateway(balance: 10000);
+
+    $result = (new StoredValueExecutionDriver($gateway))->execute(storedValueContext(
+        replenishable: true,
+        maxBalance: 20000,
+        otpRequiredAbove: 5000,
+        canonical: true,
+    ));
+
+    expect($result->successful)->toBeTrue()
+        ->and($result->metadata['stored_value_reference'])->toBe('SV-1')
+        ->and($result->metadata['remaining_balance'])->toBe(10000);
+});
+
+it('uses canonical nested stored value policy for replenishment', function () {
+    $gateway = new FakeStoredValueGateway(balance: 4000);
+
+    $result = (new StoredValueExecutionDriver($gateway))->execute(storedValueContext(
+        meta: [
+            'operation' => 'replenish',
+            'amount' => 2000,
+        ],
+        replenishable: true,
+        maxBalance: 10000,
+        canonical: true,
+    ));
+
+    expect($result->successful)->toBeTrue()
+        ->and($result->events)->toContain('stored_value.replenished')
+        ->and($result->metadata['remaining_balance'])->toBe(6000);
+});
+
 it('does not disburse cash on ownership claim', function () {
     $gateway = new FakeStoredValueGateway(balance: 10000);
 
@@ -149,19 +182,31 @@ function storedValueContext(
     bool $replenishable = false,
     int $maxBalance = 10000,
     int $otpRequiredAbove = 0,
+    bool $canonical = false,
 ): ExecutionContextData {
+    $metadata = $canonical
+        ? [
+            'stored_value' => [
+                'reference' => 'SV-1',
+                'max_balance' => $maxBalance,
+                'replenishable' => $replenishable,
+                'otp_required_above' => $otpRequiredAbove,
+            ],
+        ]
+        : [
+            'stored_value_reference' => 'SV-1',
+            'replenishable' => $replenishable,
+            'max_balance' => $maxBalance,
+            'otp_required_above' => $otpRequiredAbove,
+        ];
+
     return new ExecutionContextData(
         contact: new Contact(['mobile' => '+639171234567']),
         voucherCode: 'STORED-1',
         meta: $meta,
         instruction: ExecutionInstructionData::from([
             'driver' => 'stored_value',
-            'metadata' => [
-                'stored_value_reference' => 'SV-1',
-                'replenishable' => $replenishable,
-                'max_balance' => $maxBalance,
-                'otp_required_above' => $otpRequiredAbove,
-            ],
+            'metadata' => $metadata,
         ]),
     );
 }
@@ -220,7 +265,8 @@ class FakeStoredValueGateway implements StoredValueExecutionGateway
     private function state(ExecutionContextData $context): array
     {
         return [
-            'stored_value_reference' => $context->instruction?->metadata['stored_value_reference'],
+            'stored_value_reference' => data_get($context->instruction?->metadata, 'stored_value.reference')
+                ?? $context->instruction?->metadata['stored_value_reference'],
             'owner_mobile' => $context->contact->mobile,
             'remaining_balance' => $this->balance,
         ];

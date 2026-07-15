@@ -2,6 +2,7 @@
 
 namespace LBHurtado\Voucher\Data;
 
+use LBHurtado\Voucher\Exceptions\UnsupportedExecutionInstructionSchemaException;
 use Spatie\LaravelData\Data;
 
 class ExecutionInstructionData extends Data
@@ -16,7 +17,11 @@ class ExecutionInstructionData extends Data
         public ?string $fallback = null,
         public ?array $visibility = null,
         public ?array $metadata = null,
-    ) {}
+    ) {
+        if ($this->schema !== self::SCHEMA) {
+            throw UnsupportedExecutionInstructionSchemaException::forSchema($this->schema);
+        }
+    }
 
     public static function rules(): array
     {

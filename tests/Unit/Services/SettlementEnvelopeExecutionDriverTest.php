@@ -33,6 +33,24 @@ it('executes a settlement-envelope authority voucher', function () {
         ->and($gateway->calls)->toBe(['load', 'assertReady', 'lock', 'childVoucherInstructions']);
 });
 
+it('accepts canonical nested settlement envelope metadata', function () {
+    $gateway = new FakeSettlementEnvelopeGateway([
+        'children' => [
+            ['cash' => ['amount' => 100, 'currency' => 'PHP']],
+        ],
+    ]);
+
+    $result = (new SettlementEnvelopeExecutionDriver(
+        gateway: $gateway,
+        vouchers: new FakeSettlementEnvelopeVoucherGenerator,
+        redeemer: new FakeSettlementEnvelopeVoucherRedeemer,
+    ))->execute(settlementEnvelopeContext(envelopeReference: 'ENV-NESTED', canonical: true));
+
+    expect($result->successful)->toBeTrue()
+        ->and($gateway->loadedReferences)->toBe(['ENV-NESTED'])
+        ->and($result->metadata['envelope_reference'])->toBe('ENV-NESTED');
+});
+
 it('loads the configured settlement envelope', function () {
     $gateway = new FakeSettlementEnvelopeGateway;
 
@@ -166,17 +184,30 @@ function settlementEnvelopeContext(
     string $envelopeReference = 'ENV-123',
     bool $autoRedeemChildren = false,
     bool $fallbackToClaim = false,
+    bool $canonical = false,
 ): ExecutionContextData {
+    $metadata = $canonical
+        ? [
+            'settlement_envelope' => [
+                'reference' => $envelopeReference,
+                'readiness_gate' => 'settleable',
+                'child_generation' => 'from_envelope',
+                'auto_redeem_children' => $autoRedeemChildren,
+                'fallback_to_claim' => $fallbackToClaim,
+            ],
+        ]
+        : [
+            'envelope_reference' => $envelopeReference,
+            'auto_redeem_children' => $autoRedeemChildren,
+            'fallback_to_claim' => $fallbackToClaim,
+        ];
+
     return new ExecutionContextData(
         contact: new Contact(['mobile' => '+639171234567']),
         voucherCode: 'AUTHORITY-1',
         instruction: ExecutionInstructionData::from([
             'driver' => 'settlement_envelope',
-            'metadata' => [
-                'envelope_reference' => $envelopeReference,
-                'auto_redeem_children' => $autoRedeemChildren,
-                'fallback_to_claim' => $fallbackToClaim,
-            ],
+            'metadata' => $metadata,
         ]),
     );
 }
@@ -202,9 +233,11 @@ class FakeSettlementEnvelopeGateway implements SettlementEnvelopeExecutionGatewa
     public function load(ExecutionContextData $context): mixed
     {
         $this->calls[] = 'load';
-        $this->loadedReferences[] = (string) $context->instruction?->metadata['envelope_reference'];
+        $reference = data_get($context->instruction?->metadata, 'settlement_envelope.reference')
+            ?? $context->instruction?->metadata['envelope_reference'];
+        $this->loadedReferences[] = (string) $reference;
 
-        return ['reference' => $context->instruction?->metadata['envelope_reference']] + $this->envelope;
+        return ['reference' => $reference] + $this->envelope;
     }
 
     public function assertReady(mixed $envelope, ExecutionContextData $context): void

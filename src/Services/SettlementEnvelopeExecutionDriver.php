@@ -148,12 +148,20 @@ class SettlementEnvelopeExecutionDriver implements ExecutionDriverContract
 
     private function autoRedeemChildren(ExecutionContextData $context): bool
     {
-        return (bool) ($context->instruction?->metadata['auto_redeem_children'] ?? false);
+        return (bool) (
+            data_get($context->instruction?->metadata, 'settlement_envelope.auto_redeem_children')
+            ?? $context->instruction?->metadata['auto_redeem_children']
+            ?? false
+        );
     }
 
     private function fallbackToClaim(ExecutionContextData $context): bool
     {
-        return (bool) ($context->instruction?->metadata['fallback_to_claim'] ?? false);
+        return (bool) (
+            data_get($context->instruction?->metadata, 'settlement_envelope.fallback_to_claim')
+            ?? $context->instruction?->metadata['fallback_to_claim']
+            ?? false
+        );
     }
 
     /**
@@ -162,7 +170,9 @@ class SettlementEnvelopeExecutionDriver implements ExecutionDriverContract
     private function metadataFor(ExecutionContextData $context, mixed $envelope): array
     {
         return [
-            'envelope_reference' => $context->instruction?->metadata['envelope_reference'] ?? data_get($envelope, 'reference'),
+            'envelope_reference' => data_get($context->instruction?->metadata, 'settlement_envelope.reference')
+                ?? $context->instruction?->metadata['envelope_reference']
+                ?? data_get($envelope, 'reference'),
             'authority_voucher_code' => $context->voucherCode,
             'driver' => $this->key(),
         ];

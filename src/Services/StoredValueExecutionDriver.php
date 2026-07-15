@@ -208,17 +208,29 @@ class StoredValueExecutionDriver implements ExecutionDriverContract
 
     private function replenishable(ExecutionContextData $context): bool
     {
-        return (bool) ($context->instruction?->metadata['replenishable'] ?? false);
+        return (bool) (
+            data_get($context->instruction?->metadata, 'stored_value.replenishable')
+            ?? $context->instruction?->metadata['replenishable']
+            ?? false
+        );
     }
 
     private function otpRequiredAbove(ExecutionContextData $context): int
     {
-        return (int) ($context->instruction?->metadata['otp_required_above'] ?? 0);
+        return (int) (
+            data_get($context->instruction?->metadata, 'stored_value.otp_required_above')
+            ?? $context->instruction?->metadata['otp_required_above']
+            ?? 0
+        );
     }
 
     private function maxBalance(ExecutionContextData $context): int
     {
-        return (int) ($context->instruction?->metadata['max_balance'] ?? 0);
+        return (int) (
+            data_get($context->instruction?->metadata, 'stored_value.max_balance')
+            ?? $context->instruction?->metadata['max_balance']
+            ?? 0
+        );
     }
 
     /**
@@ -236,7 +248,9 @@ class StoredValueExecutionDriver implements ExecutionDriverContract
     private function baseMetadata(ExecutionContextData $context): array
     {
         return [
-            'stored_value_reference' => $context->instruction?->metadata['stored_value_reference'] ?? $context->voucherCode,
+            'stored_value_reference' => data_get($context->instruction?->metadata, 'stored_value.reference')
+                ?? $context->instruction?->metadata['stored_value_reference']
+                ?? $context->voucherCode,
             'authority_voucher_code' => $context->voucherCode,
             'driver' => $this->key(),
         ];

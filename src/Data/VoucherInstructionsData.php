@@ -262,7 +262,7 @@ class VoucherInstructionsData extends Data
             'starts_at' => $validated['starts_at'] ?? null,
             'expires_at' => $validated['expires_at'] ?? null,
             'metadata' => $validated['metadata'] ?? null,
-            'voucher_type' => isset($validated['voucher_type']) ? VoucherType::from($validated['voucher_type']) : null,
+            'voucher_type' => $validated['voucher_type'] ?? null,
             'target_amount' => $validated['target_amount'] ?? null,
             'rules' => $validated['rules'] ?? null,
             'execution' => isset($validated['execution']) ? [

@@ -45,6 +45,7 @@ class VoucherInstructionsData extends Data
         public ?float $target_amount = null, // Target amount for PAYABLE/SETTLEMENT vouchers
         public ?array $rules = null,         // Settlement-specific rules (min_payment, max_payment, allow_overpayment, etc.)
         public ?ExecutionInstructionData $execution = null,
+        public ?ClaimInstructionData $claim = null,
     ) {
         $this->applyRulesAndDefaults();
         //        $this->ttl = $ttl ?: CarbonInterval::hours(config('instructions.ttl'));
@@ -133,6 +134,28 @@ class VoucherInstructionsData extends Data
             'execution.visibility' => ['nullable', 'array'],
             'execution.visibility.*' => ['string', 'min:1'],
             'execution.metadata' => ['nullable', 'array'],
+
+            'claim' => ['nullable', 'array'],
+            'claim.outcomes' => ['required_with:claim', 'array', 'min:1'],
+            'claim.outcomes.*' => ['required', 'array'],
+            'claim.outcomes.*.key' => ['required', 'string', 'regex:/^[a-z][a-z0-9_]*$/'],
+            'claim.outcomes.*.pricing_profile' => ['nullable', 'string', 'min:1'],
+            'claim.outcomes.*.requirements' => ['nullable', 'array'],
+            'claim.selection' => ['nullable', 'string', 'in:claimant,server'],
+            'claim.consumption' => ['nullable', 'string', 'in:one_of'],
+            'claim.default_outcome' => ['nullable', 'string', 'regex:/^[a-z][a-z0-9_]*$/'],
+            'claim.onboarding' => ['nullable', 'array'],
+            'claim.onboarding.mode' => ['nullable', 'string', 'in:never,if_required,required'],
+            'claim.onboarding.profile' => ['nullable', 'string', 'min:1'],
+            'claim.claimant' => ['nullable', 'array'],
+            'claim.claimant.mode' => ['nullable', 'string', 'in:unbound,recipient'],
+            'claim.claimant.reference' => [
+                'nullable',
+                'string',
+                'min:1',
+                'required_if:claim.claimant.mode,recipient',
+            ],
+            'claim.profile' => ['nullable', 'string', 'in:'.ClaimInstructionData::SCHEMA],
 
             'metadata' => ['nullable', 'array'],
             'metadata.flow_type' => ['nullable', 'string'],
@@ -273,6 +296,15 @@ class VoucherInstructionsData extends Data
                 'fallback' => $validated['execution']['fallback'] ?? null,
                 'visibility' => $validated['execution']['visibility'] ?? null,
                 'metadata' => $validated['execution']['metadata'] ?? null,
+            ] : null,
+            'claim' => isset($validated['claim']) ? [
+                'outcomes' => $validated['claim']['outcomes'],
+                'selection' => $validated['claim']['selection'] ?? 'claimant',
+                'consumption' => $validated['claim']['consumption'] ?? 'one_of',
+                'default_outcome' => $validated['claim']['default_outcome'] ?? null,
+                'onboarding' => $validated['claim']['onboarding'] ?? null,
+                'claimant' => $validated['claim']['claimant'] ?? null,
+                'profile' => $validated['claim']['profile'] ?? ClaimInstructionData::SCHEMA,
             ] : null,
         ];
 

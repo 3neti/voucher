@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Validation\ValidationException;
+use LBHurtado\Voucher\Data\ClaimantBindingData;
 use LBHurtado\Voucher\Data\ClaimInstructionData;
 use LBHurtado\Voucher\Data\ClaimOutcomeInstructionData;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
@@ -98,3 +99,47 @@ it('rejects malformed claim outcome keys during instruction validation', functio
         ],
     ]);
 })->throws(ValidationException::class);
+
+it('enforces claim policy invariants when instantiated directly', function () {
+    $outcome = ClaimOutcomeInstructionData::from(['key' => 'account_funding']);
+
+    expect(fn () => new ClaimInstructionData(outcomes: []))->toThrow(
+        InvalidArgumentException::class,
+        'Voucher claim instructions require at least one outcome.',
+    )->and(fn () => new ClaimInstructionData(
+        outcomes: [$outcome],
+        selection: 'operator',
+    ))->toThrow(
+        InvalidArgumentException::class,
+        'Unsupported Voucher claim selection [operator].',
+    )->and(fn () => new ClaimInstructionData(
+        outcomes: [$outcome],
+        consumption: 'all',
+    ))->toThrow(
+        InvalidArgumentException::class,
+        'Unsupported Voucher claim consumption [all].',
+    )->and(fn () => new ClaimInstructionData(
+        outcomes: [$outcome],
+        profile: 'voucher.claim.v2',
+    ))->toThrow(
+        InvalidArgumentException::class,
+        'Unsupported Voucher claim profile [voucher.claim.v2].',
+    );
+});
+
+it('enforces nested policy invariants when instantiated directly', function () {
+    expect(fn () => new ClaimOutcomeInstructionData('Account Funding'))->toThrow(
+        InvalidArgumentException::class,
+        'Voucher claim outcome keys must use lowercase snake case.',
+    )->and(fn () => new ClaimantBindingData(mode: 'recipient'))->toThrow(
+        InvalidArgumentException::class,
+        'Recipient-bound Voucher claims require a claimant reference.',
+    );
+});
+
+it('rejects malformed persisted claim policies before construction', function () {
+    expect(fn () => ClaimInstructionData::from([
+        'outcomes' => [['key' => 'account_funding']],
+        'selection' => 'operator',
+    ]))->toThrow(ValidationException::class);
+});

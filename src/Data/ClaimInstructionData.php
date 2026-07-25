@@ -23,6 +23,38 @@ final class ClaimInstructionData extends Data
         public ?ClaimantBindingData $claimant = null,
         public string $profile = self::SCHEMA,
     ) {
+        if ($this->outcomes === []) {
+            throw new InvalidArgumentException(
+                'Voucher claim instructions require at least one outcome.',
+            );
+        }
+
+        foreach ($this->outcomes as $outcome) {
+            if (! $outcome instanceof ClaimOutcomeInstructionData) {
+                throw new InvalidArgumentException(
+                    'Voucher claim outcomes must use typed outcome instructions.',
+                );
+            }
+        }
+
+        if (! in_array($this->selection, ['claimant', 'server'], true)) {
+            throw new InvalidArgumentException(
+                "Unsupported Voucher claim selection [{$this->selection}].",
+            );
+        }
+
+        if ($this->consumption !== 'one_of') {
+            throw new InvalidArgumentException(
+                "Unsupported Voucher claim consumption [{$this->consumption}].",
+            );
+        }
+
+        if ($this->profile !== self::SCHEMA) {
+            throw new InvalidArgumentException(
+                "Unsupported Voucher claim profile [{$this->profile}].",
+            );
+        }
+
         $keys = array_map(
             static fn (ClaimOutcomeInstructionData $outcome): string => $outcome->key,
             $this->outcomes,

@@ -5,6 +5,11 @@ use LBHurtado\Voucher\Data\RiderInstructionData;
 use LBHurtado\Voucher\Data\RiderStampData;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Enums\RiderContentFormat;
+use LBHurtado\Voucher\Enums\RiderStampArtworkSource;
+use LBHurtado\Voucher\Enums\RiderStampArtworkTreatment;
+use LBHurtado\Voucher\Enums\RiderStampClaimMarker;
+use LBHurtado\Voucher\Enums\RiderStampClaimMarkerPosition;
+use LBHurtado\Voucher\Enums\RiderStampCopySource;
 use LBHurtado\Voucher\Enums\RiderStampFit;
 use LBHurtado\Voucher\Enums\RiderStampPosition;
 use LBHurtado\Voucher\Enums\RiderStampSource;
@@ -25,7 +30,14 @@ it('hydrates and serializes format-aware Rider instructions with a structured St
             'position' => 'top',
             'scrim' => 28,
             'theme' => 'dark',
-            'version' => 1,
+            'version' => 2,
+            'artwork_source' => 'url',
+            'artwork_treatment' => 'artwork',
+            'copy_source' => 'splash',
+            'show_logo' => true,
+            'show_tagline' => false,
+            'claim_marker' => 'both',
+            'claim_marker_position' => 'bottom_right',
         ],
     ]);
 
@@ -36,14 +48,42 @@ it('hydrates and serializes format-aware Rider instructions with a structured St
         ->and($rider->stamp->fit)->toBe(RiderStampFit::Contain)
         ->and($rider->stamp->position)->toBe(RiderStampPosition::Top)
         ->and($rider->stamp->theme)->toBe(RiderStampTheme::Dark)
+        ->and($rider->stamp->artwork_source)->toBe(RiderStampArtworkSource::Url)
+        ->and($rider->stamp->artwork_treatment)->toBe(RiderStampArtworkTreatment::Artwork)
+        ->and($rider->stamp->copy_source)->toBe(RiderStampCopySource::Splash)
+        ->and($rider->stamp->claim_marker)->toBe(RiderStampClaimMarker::Both)
+        ->and($rider->stamp->claim_marker_position)->toBe(RiderStampClaimMarkerPosition::BottomRight)
         ->and($rider->toArray()['stamp'])->toMatchArray([
             'source' => 'splash',
             'fit' => 'contain',
             'position' => 'top',
             'scrim' => 28,
             'theme' => 'dark',
-            'version' => 1,
+            'version' => 2,
+            'artwork_source' => 'url',
+            'artwork_treatment' => 'artwork',
+            'copy_source' => 'splash',
+            'show_logo' => true,
+            'show_tagline' => false,
+            'claim_marker' => 'both',
+            'claim_marker_position' => 'bottom_right',
         ]);
+});
+
+it('hydrates legacy Rider Stamp v1 instructions without requiring composition fields', function () {
+    $stamp = RiderStampData::from([
+        'source' => 'url',
+        'fit' => 'cover',
+        'position' => 'center',
+        'version' => 1,
+    ]);
+
+    expect($stamp->version)->toBe(RiderStampData::LEGACY_SCHEMA_VERSION)
+        ->and($stamp->source)->toBe(RiderStampSource::Url)
+        ->and($stamp->artwork_source)->toBeNull()
+        ->and($stamp->artwork_treatment)->toBeNull()
+        ->and($stamp->copy_source)->toBeNull()
+        ->and($stamp->claim_marker)->toBeNull();
 });
 
 it('keeps legacy Rider instructions clean and backward compatible', function () {
@@ -95,5 +135,10 @@ it('validates Rider Stamp policy fields before hydration', function (array $stam
     'invalid fit' => [['fit' => 'stretch']],
     'invalid position' => [['position' => 'everywhere']],
     'invalid scrim' => [['scrim' => 101]],
-    'unsupported version' => [['version' => 2]],
+    'unsupported version' => [['version' => 3]],
+    'invalid artwork source' => [['artwork_source' => 'remote_page']],
+    'invalid artwork treatment' => [['artwork_treatment' => 'iframe']],
+    'invalid copy source' => [['copy_source' => 'provider_payload']],
+    'invalid claim marker' => [['claim_marker' => 'editable_url']],
+    'invalid claim marker position' => [['claim_marker_position' => 'everywhere']],
 ]);

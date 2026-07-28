@@ -9,6 +9,11 @@ use LBHurtado\Voucher\Data\Casts\CarbonIntervalCast;
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
 use LBHurtado\Voucher\Data\Transformers\TtlToStringTransformer;
 use LBHurtado\Voucher\Enums\RiderContentFormat;
+use LBHurtado\Voucher\Enums\RiderStampArtworkSource;
+use LBHurtado\Voucher\Enums\RiderStampArtworkTreatment;
+use LBHurtado\Voucher\Enums\RiderStampClaimMarker;
+use LBHurtado\Voucher\Enums\RiderStampClaimMarkerPosition;
+use LBHurtado\Voucher\Enums\RiderStampCopySource;
 use LBHurtado\Voucher\Enums\RiderStampFit;
 use LBHurtado\Voucher\Enums\RiderStampPosition;
 use LBHurtado\Voucher\Enums\RiderStampSource;
@@ -102,7 +107,17 @@ class VoucherInstructionsData extends Data
             'rider.stamp.position' => 'nullable|string|in:'.implode(',', array_column(RiderStampPosition::cases(), 'value')),
             'rider.stamp.scrim' => 'nullable|integer|min:0|max:100',
             'rider.stamp.theme' => 'nullable|string|in:'.implode(',', array_column(RiderStampTheme::cases(), 'value')),
-            'rider.stamp.version' => 'nullable|integer|in:'.RiderStampData::SCHEMA_VERSION,
+            'rider.stamp.version' => 'nullable|integer|in:'.implode(',', [
+                RiderStampData::LEGACY_SCHEMA_VERSION,
+                RiderStampData::SCHEMA_VERSION,
+            ]),
+            'rider.stamp.artwork_source' => 'nullable|string|in:'.implode(',', array_column(RiderStampArtworkSource::cases(), 'value')),
+            'rider.stamp.artwork_treatment' => 'nullable|string|in:'.implode(',', array_column(RiderStampArtworkTreatment::cases(), 'value')),
+            'rider.stamp.copy_source' => 'nullable|string|in:'.implode(',', array_column(RiderStampCopySource::cases(), 'value')),
+            'rider.stamp.show_logo' => 'nullable|boolean',
+            'rider.stamp.show_tagline' => 'nullable|boolean',
+            'rider.stamp.claim_marker' => 'nullable|string|in:'.implode(',', array_column(RiderStampClaimMarker::cases(), 'value')),
+            'rider.stamp.claim_marker_position' => 'nullable|string|in:'.implode(',', array_column(RiderStampClaimMarkerPosition::cases(), 'value')),
 
             'count' => 'required|integer|min:1',
             'prefix' => 'nullable|string|min:1',

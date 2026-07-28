@@ -8,6 +8,11 @@ use Illuminate\Support\Number;
 use LBHurtado\Voucher\Data\Casts\CarbonIntervalCast;
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
 use LBHurtado\Voucher\Data\Transformers\TtlToStringTransformer;
+use LBHurtado\Voucher\Enums\RiderContentFormat;
+use LBHurtado\Voucher\Enums\RiderStampFit;
+use LBHurtado\Voucher\Enums\RiderStampPosition;
+use LBHurtado\Voucher\Enums\RiderStampSource;
+use LBHurtado\Voucher\Enums\RiderStampTheme;
 use LBHurtado\Voucher\Enums\VoucherInputField;
 use LBHurtado\Voucher\Enums\VoucherType;
 use LBHurtado\Voucher\Rules\ValidISODuration;
@@ -87,6 +92,17 @@ class VoucherInstructionsData extends Data
             'rider.splash_meta.sanitized' => 'nullable|boolean',
             'rider.splash_meta.html_profile' => 'nullable|string',
             'rider.og_source' => 'nullable|string|in:message,url,splash',
+            'rider.message_format' => 'nullable|string|in:'.implode(',', array_column(RiderContentFormat::cases(), 'value')),
+            'rider.splash_format' => 'nullable|string|in:'.implode(',', array_column(RiderContentFormat::cases(), 'value')),
+            'rider.stamp' => 'nullable|array',
+            'rider.stamp.source' => 'nullable|string|in:'.implode(',', array_column(RiderStampSource::cases(), 'value')),
+            'rider.stamp.title' => 'nullable|string|max:120',
+            'rider.stamp.description' => 'nullable|string|max:240',
+            'rider.stamp.fit' => 'nullable|string|in:'.implode(',', array_column(RiderStampFit::cases(), 'value')),
+            'rider.stamp.position' => 'nullable|string|in:'.implode(',', array_column(RiderStampPosition::cases(), 'value')),
+            'rider.stamp.scrim' => 'nullable|integer|min:0|max:100',
+            'rider.stamp.theme' => 'nullable|string|in:'.implode(',', array_column(RiderStampTheme::cases(), 'value')),
+            'rider.stamp.version' => 'nullable|integer|in:'.RiderStampData::SCHEMA_VERSION,
 
             'count' => 'required|integer|min:1',
             'prefix' => 'nullable|string|min:1',
@@ -239,6 +255,9 @@ class VoucherInstructionsData extends Data
                 'splash_timeout' => $validated['rider']['splash_timeout'] ?? null,
                 'splash_meta' => $validated['rider']['splash_meta'] ?? null,
                 'og_source' => $validated['rider']['og_source'] ?? null,
+                'message_format' => $validated['rider']['message_format'] ?? null,
+                'splash_format' => $validated['rider']['splash_format'] ?? null,
+                'stamp' => $validated['rider']['stamp'] ?? null,
             ],
             'validation' => isset($validated['validation']) ? [
                 'signature' => isset($validated['validation']['signature']) ? [
@@ -348,6 +367,9 @@ class VoucherInstructionsData extends Data
                 'splash_timeout' => null,
                 'splash_meta' => null,
                 'og_source' => null,
+                'message_format' => null,
+                'splash_format' => null,
+                'stamp' => null,
             ],
             'validation' => [
                 'signature' => null,
@@ -427,8 +449,19 @@ class VoucherInstructionsData extends Data
             ->filter(function ($value, $key) use ($parentKey) {
                 $currentKey = $parentKey ? "{$parentKey}.{$key}" : $key;
 
-                // NEVER filter out rider fields - keep all of them even if null
-                if ($parentKey === 'rider' || $currentKey === 'rider') {
+                // Preserve the original Rider wire shape while allowing additive fields
+                // to remain absent from legacy payloads until they are configured.
+                $legacyRiderFields = [
+                    'rider.message',
+                    'rider.url',
+                    'rider.redirect_timeout',
+                    'rider.splash',
+                    'rider.splash_timeout',
+                    'rider.splash_meta',
+                    'rider.og_source',
+                ];
+
+                if ($currentKey === 'rider' || in_array($currentKey, $legacyRiderFields, true)) {
                     return true;
                 }
 

@@ -54,6 +54,7 @@ class VoucherInstructionsData extends Data
         public ?VoucherType $voucher_type = null, // Settlement voucher type (REDEEMABLE, PAYABLE, SETTLEMENT)
         public ?float $target_amount = null, // Target amount for PAYABLE/SETTLEMENT vouchers
         public ?array $rules = null,         // Settlement-specific rules (min_payment, max_payment, allow_overpayment, etc.)
+        public bool $onboarding = false,
         public ?ExecutionInstructionData $execution = null,
         public ?ClaimInstructionData $claim = null,
     ) {
@@ -154,6 +155,8 @@ class VoucherInstructionsData extends Data
             'rules.max_payment' => 'nullable|numeric|min:0',
             'rules.allow_overpayment' => 'nullable|boolean',
             'rules.auto_close_on_full_payment' => 'nullable|boolean',
+
+            'onboarding' => ['nullable', 'boolean'],
 
             'execution' => ['nullable', 'array'],
             'execution.schema' => ['nullable', 'string', 'min:1'],
@@ -322,6 +325,8 @@ class VoucherInstructionsData extends Data
             'voucher_type' => $validated['voucher_type'] ?? null,
             'target_amount' => $validated['target_amount'] ?? null,
             'rules' => $validated['rules'] ?? null,
+            'onboarding' => $validated['onboarding']
+                ?? data_get($validated, 'claim.onboarding.mode') === 'required',
             'execution' => isset($validated['execution']) ? [
                 'schema' => $validated['execution']['schema'] ?? ExecutionInstructionData::SCHEMA,
                 'driver' => $validated['execution']['driver'] ?? 'default',
@@ -400,6 +405,7 @@ class VoucherInstructionsData extends Data
             'ttl' => null, // New field for ttl
             'starts_at' => null,
             'expires_at' => null,
+            'onboarding' => false,
         ];
 
         return VoucherInstructionsData::from($data_array);
@@ -478,6 +484,10 @@ class VoucherInstructionsData extends Data
 
                 if ($currentKey === 'rider' || in_array($currentKey, $legacyRiderFields, true)) {
                     return true;
+                }
+
+                if ($currentKey === 'onboarding' && $value === false) {
+                    return false;
                 }
 
                 // Filter out only nulls and empty strings — keep empty arrays

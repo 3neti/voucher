@@ -1,6 +1,7 @@
 <?php
 
 use Carbon\Carbon;
+use Illuminate\Validation\ValidationException;
 use LBHurtado\Voucher\Data\VoucherTimingData;
 
 test('can create with all fields', function () {
@@ -142,4 +143,4 @@ test('validates duration seconds is non negative', function () {
     VoucherTimingData::validateAndCreate([
         'duration_seconds' => -1,
     ]);
-})->throws(\Illuminate\Validation\ValidationException::class);
+})->throws(ValidationException::class);

@@ -1,31 +1,48 @@
 <?php
 
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\ApplyUsageLimits;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\CreateCashEntities;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\LogAuditTrail;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\MarkAsProcessed;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\NormalizeMetadata;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\NotifyBatchCreator;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\PopulateSettlementFields;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\RunFraudChecks;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\TriggerPostGenerationWorkflows;
+use LBHurtado\Voucher\Pipelines\GeneratedVouchers\ValidateStructure;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract;
+use LBHurtado\Voucher\Pipelines\Voucher\CheckBalance;
+use LBHurtado\Voucher\Pipelines\Voucher\EscrowAction;
+use LBHurtado\Voucher\Pipelines\Voucher\PersistCash;
+
 return [
     'updated' => [
 
     ],
     'post-generation' => [
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\ValidateStructure::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\PopulateSettlementFields::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\NormalizeMetadata::class,
+        ValidateStructure::class,
+        PopulateSettlementFields::class,
+        NormalizeMetadata::class,
 
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\RunFraudChecks::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\ApplyUsageLimits::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\CreateCashEntities::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\NotifyBatchCreator::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\LogAuditTrail::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\MarkAsProcessed::class,
-        \LBHurtado\Voucher\Pipelines\GeneratedVouchers\TriggerPostGenerationWorkflows::class,
+        RunFraudChecks::class,
+        ApplyUsageLimits::class,
+        CreateCashEntities::class,
+        NotifyBatchCreator::class,
+        LogAuditTrail::class,
+        MarkAsProcessed::class,
+        TriggerPostGenerationWorkflows::class,
     ],
     'mint-cash' => [
-        \LBHurtado\Voucher\Pipelines\Voucher\CheckBalance::class,
-        \LBHurtado\Voucher\Pipelines\Voucher\EscrowAction::class,
-        \LBHurtado\Voucher\Pipelines\Voucher\PersistCash::class,
+        CheckBalance::class,
+        EscrowAction::class,
+        PersistCash::class,
     ],
     'post-redemption' => [
-        \LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash::class,
-        \LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class,
-        \LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash::class,
+        ValidateRedeemerAndCash::class,
+        ValidateRedemptionContract::class,
+        DisburseCash::class,
     ],
 ];
 

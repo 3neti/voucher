@@ -1,9 +1,9 @@
 <?php
 
-use LBHurtado\Voucher\Tests\Fakes\FakePayoutProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\EmiCore\Contracts\PayoutProvider;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
+use LBHurtado\Voucher\Tests\Fakes\FakePayoutProvider;
 
 uses(RefreshDatabase::class);
 
@@ -27,7 +27,7 @@ it('calls disburse exactly once on the happy path', function () {
 
 it('never calls a concrete provider adapter directly from voucher', function () {
     expect(app(PayoutProvider::class))->toBeInstanceOf(FakePayoutProvider::class);
-    expect(app(PayoutProvider::class))->not->toBeInstanceOf(\stdClass::class);
+    expect(app(PayoutProvider::class))->not->toBeInstanceOf(stdClass::class);
 });
 
 it('passes the built payout request to the provider unmodified', function () {

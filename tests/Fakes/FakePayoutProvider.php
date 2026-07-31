@@ -143,17 +143,17 @@ class FakePayoutProvider implements PayoutProvider
         );
     }
 
-//    public function checkStatus(string $transactionId): PayoutResultData
-//    {
-//        $this->checkStatusCallCount++;
-//
-//        return new PayoutResultData(
-//            transaction_id: $transactionId,
-//            uuid: $this->nextUuid ?? Str::uuid()->toString(),
-//            status: $this->nextStatus,
-//            provider: $this->nextProvider ?? 'fake',
-//        );
-//    }
+    //    public function checkStatus(string $transactionId): PayoutResultData
+    //    {
+    //        $this->checkStatusCallCount++;
+    //
+    //        return new PayoutResultData(
+    //            transaction_id: $transactionId,
+    //            uuid: $this->nextUuid ?? Str::uuid()->toString(),
+    //            status: $this->nextStatus,
+    //            provider: $this->nextProvider ?? 'fake',
+    //        );
+    //    }
 
     public function checkStatus(string $transactionId): PayoutResultData
     {

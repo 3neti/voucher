@@ -16,6 +16,7 @@ use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Enums\VoucherInputField;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
 use LBHurtado\Voucher\Tests\Models\User;
+use LBHurtado\Wallet\Actions\TopupWalletAction;
 use LBHurtado\Wallet\Services\SystemUserResolverService;
 
 uses(RefreshDatabase::class);
@@ -32,7 +33,7 @@ beforeEach(function () {
     $user->mobile = '09178251991';
     $user->save();
 
-    \LBHurtado\Wallet\Actions\TopupWalletAction::run($user, 1000);
+    TopupWalletAction::run($user, 1000);
 
     $this->actingAs($user);
 });

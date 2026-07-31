@@ -1,8 +1,8 @@
 <?php
 
-use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash;
 
 uses(RefreshDatabase::class);
 

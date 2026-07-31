@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use LBHurtado\Voucher\Enums\VoucherState;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
+use LBHurtado\Voucher\Enums\VoucherState;
 
 uses(RefreshDatabase::class);
 

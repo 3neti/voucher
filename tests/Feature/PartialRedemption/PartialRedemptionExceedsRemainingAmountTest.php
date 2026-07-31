@@ -9,7 +9,6 @@ beforeEach(function () {
     $this->setupSystemUser();
 });
 
-
 it('does not consume voucher value when the requested amount exceeds the remaining balance', function () {
     fakePayoutProvider()->willReturnSuccessfulResult();
 

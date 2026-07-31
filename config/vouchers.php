@@ -1,5 +1,14 @@
 <?php
 
+use FrittenKeeZ\Vouchers\Models\Redeemer;
+use FrittenKeeZ\Vouchers\Models\VoucherEntity;
+use LBHurtado\Voucher\MobileVerification\Drivers\BasicDriver;
+use LBHurtado\Voucher\MobileVerification\Drivers\CountriesDriver;
+use LBHurtado\Voucher\MobileVerification\Drivers\ExternalApiDriver;
+use LBHurtado\Voucher\MobileVerification\Drivers\ExternalDbDriver;
+use LBHurtado\Voucher\MobileVerification\Drivers\WhiteListDriver;
+use LBHurtado\Voucher\Models\Voucher;
+
 return [
     /*
     |--------------------------------------------------------------------------
@@ -49,9 +58,9 @@ return [
     */
 
     'models' => [
-        'entity' => FrittenKeeZ\Vouchers\Models\VoucherEntity::class,
-        'redeemer' => FrittenKeeZ\Vouchers\Models\Redeemer::class,
-        'voucher' => LBHurtado\Voucher\Models\Voucher::class,
+        'entity' => VoucherEntity::class,
+        'redeemer' => Redeemer::class,
+        'voucher' => Voucher::class,
     ],
 
     'tables' => [
@@ -93,23 +102,23 @@ return [
 
         'drivers' => [
             'basic' => [
-                'class' => LBHurtado\Voucher\MobileVerification\Drivers\BasicDriver::class,
+                'class' => BasicDriver::class,
             ],
 
             'countries' => [
-                'class' => LBHurtado\Voucher\MobileVerification\Drivers\CountriesDriver::class,
+                'class' => CountriesDriver::class,
                 'countries' => array_filter(explode(',', env('REDEMPTION_MOBILE_VERIFICATION_COUNTRIES', 'PH'))),
             ],
 
             'white_list' => [
-                'class' => LBHurtado\Voucher\MobileVerification\Drivers\WhiteListDriver::class,
+                'class' => WhiteListDriver::class,
                 'mobiles' => array_filter(explode(',', env('REDEMPTION_MOBILE_VERIFICATION_MOBILES', ''))),
                 'file' => env('REDEMPTION_MOBILE_VERIFICATION_FILE'),
                 'column' => env('REDEMPTION_MOBILE_VERIFICATION_COLUMN'),
             ],
 
             'external_api' => [
-                'class' => LBHurtado\Voucher\MobileVerification\Drivers\ExternalApiDriver::class,
+                'class' => ExternalApiDriver::class,
                 'url' => env('REDEMPTION_MOBILE_VERIFICATION_API_URL'),
                 'method' => env('REDEMPTION_MOBILE_VERIFICATION_API_METHOD', 'POST'),
                 'mobile_param' => env('REDEMPTION_MOBILE_VERIFICATION_API_MOBILE_PARAM', 'mobile'),
@@ -123,7 +132,7 @@ return [
             ],
 
             'external_db' => [
-                'class' => LBHurtado\Voucher\MobileVerification\Drivers\ExternalDbDriver::class,
+                'class' => ExternalDbDriver::class,
                 'connection' => env('REDEMPTION_MOBILE_VERIFICATION_DB_CONNECTION'),
                 'table' => env('REDEMPTION_MOBILE_VERIFICATION_DB_TABLE'),
                 'column' => env('REDEMPTION_MOBILE_VERIFICATION_DB_COLUMN'),

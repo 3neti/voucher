@@ -17,20 +17,20 @@ trait NormalizesPhoneNumbers
 
         // If starts with 0, assume PH and convert to +63
         if (str_starts_with($digits, '0')) {
-            return '+63' . substr($digits, 1);
+            return '+63'.substr($digits, 1);
         }
 
         // If starts with 63, add +
         if (str_starts_with($digits, '63')) {
-            return '+' . $digits;
+            return '+'.$digits;
         }
 
         // If already has +, return as is
         if ($hasPlus) {
-            return '+' . $digits;
+            return '+'.$digits;
         }
 
         // Default: assume PH mobile
-        return '+63' . $digits;
+        return '+63'.$digits;
     }
 }

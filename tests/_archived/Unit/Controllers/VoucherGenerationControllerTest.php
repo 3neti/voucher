@@ -5,12 +5,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Route;
 use LBHurtado\Voucher\Events\VouchersGenerated;
+use LBHurtado\Voucher\Http\Controllers\VoucherGenerationController;
 
 uses(RefreshDatabase::class);
 
 it('correctly resolves the vouchers.generate route', function () {
     // Arrange: Ensure the route is registered
-    Route::post('/vouchers/generate', \LBHurtado\Voucher\Http\Controllers\VoucherGenerationController::class)
+    Route::post('/vouchers/generate', VoucherGenerationController::class)
         ->name('vouchers.generate');
 
     // Assert: Check that the route URL is generated correctly by the route name

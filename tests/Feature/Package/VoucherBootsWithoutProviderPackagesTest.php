@@ -1,9 +1,9 @@
 <?php
 
-use LBHurtado\Voucher\Tests\Fakes\FakePayoutProvider;
 use LBHurtado\EmiCore\Contracts\BankRegistryContract;
 use LBHurtado\EmiCore\Contracts\PayoutProvider;
 use LBHurtado\EmiCore\Support\NullBankRegistry;
+use LBHurtado\Voucher\Tests\Fakes\FakePayoutProvider;
 
 it('boots without provider packages installed', function () {
     expect(true)->toBeTrue();

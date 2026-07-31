@@ -1,9 +1,9 @@
 <?php
 
-use LBHurtado\Voucher\Data\VoucherInstructionsData;
-use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Validation\ValidationException;
+use LBHurtado\Voucher\Data\ExecutionInstructionData;
+use LBHurtado\Voucher\Data\VoucherInstructionsData;
 
 uses(RefreshDatabase::class);
 

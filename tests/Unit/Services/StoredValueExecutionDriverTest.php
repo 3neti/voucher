@@ -5,7 +5,6 @@ use LBHurtado\Voucher\Contracts\StoredValueExecutionGateway;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
-use LBHurtado\Voucher\Exceptions\StoredValueSpendRequiresOtpException;
 use LBHurtado\Voucher\Exceptions\StoredValueSpendRejectedException;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;

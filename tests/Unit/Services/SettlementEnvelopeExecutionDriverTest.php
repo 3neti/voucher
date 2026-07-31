@@ -8,6 +8,7 @@ use LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
+use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Exceptions\SettlementEnvelopeNotReadyException;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;
@@ -287,7 +288,7 @@ class FakeSettlementEnvelopeVoucherGenerator implements GeneratesVouchers
         $this->order = &$order;
     }
 
-    public function handle(\LBHurtado\Voucher\Data\VoucherInstructionsData|array $instructions): Collection
+    public function handle(VoucherInstructionsData|array $instructions): Collection
     {
         $this->calls[] = 'generate';
         $this->order[] = 'generate';

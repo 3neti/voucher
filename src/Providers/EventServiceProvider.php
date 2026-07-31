@@ -4,6 +4,8 @@ namespace LBHurtado\Voucher\Providers;
 
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\Event;
+use LBHurtado\Voucher\Events\VouchersGenerated;
+use LBHurtado\Voucher\Listeners\HandleGeneratedVouchers;
 
 class EventServiceProvider extends ServiceProvider
 {
@@ -14,8 +16,8 @@ class EventServiceProvider extends ServiceProvider
     public function boot()
     {
         Event::listen(
-            events: \LBHurtado\Voucher\Events\VouchersGenerated::class,
-            listener: \LBHurtado\Voucher\Listeners\HandleGeneratedVouchers::class
+            events: VouchersGenerated::class,
+            listener: HandleGeneratedVouchers::class
         );
     }
 }

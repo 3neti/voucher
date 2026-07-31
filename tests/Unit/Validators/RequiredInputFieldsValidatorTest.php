@@ -60,7 +60,7 @@ it('returns a missing issue when signature is declared but absent', function () 
 
     $validator = app(RequiredInputFieldsValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('signature')
@@ -77,7 +77,7 @@ it('returns a missing issue when selfie is declared but absent', function () {
 
     $validator = app(RequiredInputFieldsValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('selfie')
@@ -93,7 +93,7 @@ it('returns a missing issue when otp is declared but absent', function () {
 
     $validator = app(RequiredInputFieldsValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('otp')
@@ -109,7 +109,7 @@ it('returns a missing issue when location is declared but absent', function () {
 
     $validator = app(RequiredInputFieldsValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('location')
@@ -125,7 +125,7 @@ it('returns multiple missing issues for multiple absent declared inputs', functi
 
     $validator = app(RequiredInputFieldsValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(3)
         ->and(collect($issues)->pluck('field')->all())->toBe(['signature', 'selfie', 'otp']);
@@ -162,7 +162,7 @@ it('returns a missing issue when kyc is declared but absent', function () {
 
     $validator = app(RequiredInputFieldsValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('kyc')

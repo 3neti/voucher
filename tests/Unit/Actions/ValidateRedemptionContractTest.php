@@ -1,6 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\Date;
+use LBHurtado\Contact\Models\Contact;
 use LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException;
+use LBHurtado\Voucher\Models\Voucher;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract;
 
 beforeEach(function () {
@@ -8,10 +11,10 @@ beforeEach(function () {
 });
 
 afterEach(function () {
-    \Illuminate\Support\Facades\Date::setTestNow();
+    Date::setTestNow();
 });
 
-function attachRedeemerToVoucher($voucher, \LBHurtado\Contact\Models\Contact $contact, array $redemption = []): void
+function attachRedeemerToVoucher($voucher, Contact $contact, array $redemption = []): void
 {
     $payload = array_replace_recursive(makeRedeemPayload(), $redemption);
 
@@ -85,7 +88,7 @@ it('passes when required signature selfie and location are present', function ()
 });
 
 it('blocks when redemption is outside the allowed time window', function () {
-    \Illuminate\Support\Facades\Date::setTestNow(
+    Date::setTestNow(
         now()->setTime(23, 30, 0)
     );
 
@@ -115,7 +118,7 @@ it('blocks when redemption is outside the allowed time window', function () {
 });
 
 it('passes when redemption is inside the allowed time window', function () {
-    \Illuminate\Support\Facades\Date::setTestNow(
+    Date::setTestNow(
         now()->setTime(10, 0, 0)
     );
 
@@ -628,7 +631,7 @@ it('treats selfie as presence contract and face match as semantic verification',
     expect(data_get($voucher->metadata, 'redemption_validation.violations.face_match'))->toBe('face_match_not_verified');
 });
 
-function attachInputsRedeemer(\LBHurtado\Voucher\Models\Voucher $voucher, \LBHurtado\Contact\Models\Contact $contact, array $inputs): void
+function attachInputsRedeemer(Voucher $voucher, Contact $contact, array $inputs): void
 {
     $voucher->redeemers()->forceCreate([
         'redeemer_id' => $contact->getKey(),
@@ -656,7 +659,7 @@ it('passes when required signature is supplied via inputs.signature', function (
 
     $voucher->refresh();
 
-    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+    $pipe = app(ValidateRedemptionContract::class);
 
     $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
@@ -680,7 +683,7 @@ it('passes when required selfie is supplied via inputs.selfie', function () {
 
     $voucher->refresh();
 
-    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+    $pipe = app(ValidateRedemptionContract::class);
 
     $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
@@ -707,7 +710,7 @@ it('passes when required location is supplied via inputs.location', function () 
 
     $voucher->refresh();
 
-    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+    $pipe = app(ValidateRedemptionContract::class);
 
     $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
@@ -731,7 +734,7 @@ it('passes when required otp is supplied via inputs.otp', function () {
 
     $voucher->refresh();
 
-    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+    $pipe = app(ValidateRedemptionContract::class);
 
     $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
@@ -761,7 +764,7 @@ it('passes when required kyc is supplied via inputs.kyc', function () {
 
     $voucher->refresh();
 
-    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+    $pipe = app(ValidateRedemptionContract::class);
 
     $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
@@ -801,7 +804,7 @@ it('passes when multiple required inputs are supplied via inputs only', function
 
     $voucher->refresh();
 
-    $pipe = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class);
+    $pipe = app(ValidateRedemptionContract::class);
 
     $result = $pipe->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
@@ -825,9 +828,9 @@ it('blocks when inputs.signature is an empty string', function () {
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.signature'))
         ->toBe('required_input_missing');
@@ -848,9 +851,9 @@ it('blocks when inputs.selfie is an empty string', function () {
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.selfie'))
         ->toBe('required_input_missing');
@@ -873,9 +876,9 @@ it('blocks when inputs.location has latitude but no longitude', function () {
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))
         ->toBe('required_input_missing');
@@ -898,9 +901,9 @@ it('blocks when inputs.location has longitude but no latitude', function () {
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))
         ->toBe('required_input_missing');
@@ -923,9 +926,9 @@ it('blocks when inputs.kyc is an empty array', function () {
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.kyc'))
         ->toBe('required_input_missing');
@@ -948,9 +951,9 @@ it('blocks when inputs.otp is an empty string', function () {
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
         ->toBe('required_input_missing');
@@ -979,9 +982,9 @@ it('blocks when multiple inputs-only required fields are blank or incomplete', f
 
     $voucher->refresh();
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.signature'))->toBe('required_input_missing')
         ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.selfie'))->toBe('required_input_missing')
@@ -1010,9 +1013,9 @@ it('blocks when inputs.otp is present but not verified and otp validation is req
         'otp_verified' => false,
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
         ->toBe('otp_not_verified');
@@ -1043,9 +1046,9 @@ it('blocks when inputs.location is present but outside the allowed radius', func
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))
         ->toBe('outside_radius');
@@ -1077,9 +1080,9 @@ it('blocks when inputs.kyc is present but face verification is not verified', fu
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.face_match'))
         ->toBe('face_match_not_verified');
@@ -1111,9 +1114,9 @@ it('blocks when inputs.kyc is present but face match confidence is too low', fun
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.face_match'))
         ->toBe('face_match_confidence_too_low');
@@ -1144,7 +1147,7 @@ it('allows inputs.location outside radius to continue when on_failure is warn', 
         ],
     ]);
 
-    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    $result = app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
     expect($result)->not->toBeNull()
@@ -1196,9 +1199,9 @@ it('collects multiple semantic issues from inputs only payloads', function () {
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))->toBe('otp_not_verified')
         ->and(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.location'))->toBe('outside_radius')
@@ -1228,7 +1231,7 @@ it('passes when otp validation is required and form-flow otp step has verified_a
         ],
     ]);
 
-    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    $result = app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
     expect($result)->not->toBeNull()
@@ -1259,9 +1262,9 @@ it('blocks when otp validation is required and form-flow otp step has explicit v
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
         ->toBe('otp_not_verified');
@@ -1289,9 +1292,9 @@ it('blocks when otp validation is required and form-flow otp step has otp_code w
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
         ->toBe('otp_not_verified');
@@ -1313,7 +1316,7 @@ it('passes when otp is required as input and form-flow otp step provides otp_cod
         ],
     ]);
 
-    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    $result = app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
     expect($result)->not->toBeNull()
@@ -1342,7 +1345,7 @@ it('passes when otp is required as input and flat otp_code plus verified_at are 
         'reference_id' => 'flow-flat-otp',
     ]);
 
-    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    $result = app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
     expect($result)->not->toBeNull()
@@ -1374,9 +1377,9 @@ it('prefers explicit verified false over verified_at inference in form-flow otp 
         ],
     ]);
 
-    expect(fn () => app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    expect(fn () => app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher))
-        ->toThrow(\LBHurtado\Voucher\Exceptions\VoucherRedemptionContractViolationException::class);
+        ->toThrow(VoucherRedemptionContractViolationException::class);
 
     expect(data_get($voucher->fresh()->metadata, 'redemption_validation.violations.otp'))
         ->toBe('otp_not_verified');
@@ -1399,7 +1402,7 @@ it('passes when required kyc is supplied via flat kyc handler payload', function
         'id_type' => 'National ID',
     ]);
 
-    $result = app(\LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract::class)
+    $result = app(ValidateRedemptionContract::class)
         ->handle($voucher, fn ($passedVoucher) => $passedVoucher);
 
     expect($result)->not->toBeNull()

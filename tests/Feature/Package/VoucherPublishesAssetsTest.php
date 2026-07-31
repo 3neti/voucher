@@ -1,5 +1,7 @@
 <?php
 
+use LBHurtado\Voucher\VoucherServiceProvider;
+
 it('publishes config successfully', function () {
     expect(is_file(__DIR__.'/../../../config/instructions.php') || true)->toBeTrue();
 });
@@ -13,5 +15,5 @@ it('publishes package assets idempotently', function () {
 });
 
 it('boots correctly after assets are published', function () {
-    expect(app(\LBHurtado\Voucher\VoucherServiceProvider::class))->toBeInstanceOf(\LBHurtado\Voucher\VoucherServiceProvider::class);
+    expect(app(VoucherServiceProvider::class))->toBeInstanceOf(VoucherServiceProvider::class);
 })->skip('fix this');

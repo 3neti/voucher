@@ -6,7 +6,9 @@ it('voucher source depends only on emi-core for provider contracts', function ()
     $emiImports = [];
 
     foreach ($files as $file) {
-        if ($file->getExtension() !== 'php') continue;
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
         $content = file_get_contents($file->getPathname());
         preg_match_all('/use\s+(LBHurtado\\\\Emi\w+)\\\\/', $content, $matches);
         foreach ($matches[1] as $ns) {

@@ -26,7 +26,7 @@ class FeedbackInstructionData extends Data
                 config('instructions.feedback.email'),
             ],
             'mobile' => [
-                ['required', (new \Propaganistas\LaravelPhone\Rules\Phone)->country('PH')->type('mobile')],
+                ['required', (new Phone)->country('PH')->type('mobile')],
                 config('instructions.feedback.mobile'),
             ],
             'webhook' => [

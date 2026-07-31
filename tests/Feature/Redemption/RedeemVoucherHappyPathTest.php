@@ -1,8 +1,11 @@
 <?php
 
-use LBHurtado\Voucher\Actions\{GenerateVouchers, RedeemVoucher};
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use LBHurtado\Contact\Models\Contact;
+use LBHurtado\Voucher\Actions\GenerateVouchers;
+use LBHurtado\Voucher\Actions\RedeemVoucher;
+use LBHurtado\Voucher\Events\DisbursementRequested;
 
 uses(RefreshDatabase::class);
 
@@ -45,7 +48,7 @@ it('stores payout result data on the voucher', function () {
 });
 
 it('dispatches disbursement requested during the flow', function () {
-    \Illuminate\Support\Facades\Event::fake([\LBHurtado\Voucher\Events\DisbursementRequested::class]);
+    Event::fake([DisbursementRequested::class]);
 
     $instructions = validInstructions();
     $voucher = GenerateVouchers::run($instructions)->first();
@@ -53,5 +56,5 @@ it('dispatches disbursement requested during the flow', function () {
 
     RedeemVoucher::run($contact, $voucher->code);
 
-    \Illuminate\Support\Facades\Event::assertDispatched(\LBHurtado\Voucher\Events\DisbursementRequested::class);
+    Event::assertDispatched(DisbursementRequested::class);
 });

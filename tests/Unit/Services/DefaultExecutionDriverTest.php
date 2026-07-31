@@ -1,8 +1,8 @@
 <?php
 
 use LBHurtado\Contact\Models\Contact;
-use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
+use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionInstructionData;
 use LBHurtado\Voucher\Data\ExecutionResultData;

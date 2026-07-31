@@ -1,8 +1,8 @@
 <?php
 
-use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
-use LBHurtado\Voucher\Models\Voucher;
 use LBHurtado\Contact\Models\Contact;
+use LBHurtado\Voucher\Models\Voucher;
+use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
 
 beforeEach(function () {
     $this->setupSystemUser();

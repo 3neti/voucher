@@ -33,7 +33,7 @@ it('can set and get processed attribute correctly', function () {
 
     // Verify the processed column and processed_on timestamp
     expect($voucher->processed)->toBeTrue();
-    expect($voucher->processed_on)->toBeInstanceOf(\DateTime::class);
+    expect($voucher->processed_on)->toBeInstanceOf(DateTime::class);
     expect($voucher->processed_on->format('Y-m-d H:i:s'))->toBe((string) now()->format('Y-m-d H:i:s'));
 
     // Mark voucher as unprocessed
@@ -94,7 +94,7 @@ it('handles valid processed_on values correctly', function () {
     $voucher->save();
 
     // Verify the processed_on attribute and processed are set correctly
-    expect($voucher->processed_on)->toBeInstanceOf(\DateTime::class);
+    expect($voucher->processed_on)->toBeInstanceOf(DateTime::class);
     expect($voucher->processed_on->format('Y-m-d H:i:s'))->toBe($now->format('Y-m-d H:i:s'));
     expect($voucher->processed)->toBeTrue();
 });

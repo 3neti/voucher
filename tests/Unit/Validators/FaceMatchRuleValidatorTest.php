@@ -3,6 +3,7 @@
 use LBHurtado\Voucher\Data\RedemptionEvidenceData;
 use LBHurtado\Voucher\Enums\RedemptionValidationCode;
 use LBHurtado\Voucher\Enums\RedemptionValidationSeverity;
+use LBHurtado\Voucher\Enums\VoucherInputField;
 use LBHurtado\Voucher\Validators\FaceMatchRuleValidator;
 
 beforeEach(function () {
@@ -12,7 +13,7 @@ beforeEach(function () {
 it('does not support vouchers when kyc is only required as an input field', function () {
     $voucher = issueVoucher(validVoucherInstructions(overrides: [
         'inputs' => [
-            'fields' => [\LBHurtado\Voucher\Enums\VoucherInputField::KYC->value],
+            'fields' => [VoucherInputField::KYC->value],
         ],
     ]));
 
@@ -20,7 +21,7 @@ it('does not support vouchers when kyc is only required as an input field', func
 
     expect(
         collect($voucher->instructions->inputs->fields)
-            ->map(fn ($field) => $field instanceof \LBHurtado\Voucher\Enums\VoucherInputField ? $field->value : $field)
+            ->map(fn ($field) => $field instanceof VoucherInputField ? $field->value : $field)
             ->contains('kyc')
     )->toBeTrue()
         ->and($validator->supports($voucher))->toBeFalse();
@@ -29,7 +30,7 @@ it('does not support vouchers when kyc is only required as an input field', func
 it('does not treat kyc input presence as face match validation requirement', function () {
     $voucher = issueVoucher(validVoucherInstructions(overrides: [
         'inputs' => [
-            'fields' => [\LBHurtado\Voucher\Enums\VoucherInputField::KYC->value],
+            'fields' => [VoucherInputField::KYC->value],
         ],
     ]));
 

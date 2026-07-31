@@ -1,14 +1,15 @@
 <?php
 
-use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash;
-use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
+use FrittenKeeZ\Vouchers\Facades\Vouchers;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
-use FrittenKeeZ\Vouchers\Facades\Vouchers;
 use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
+use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
 use LBHurtado\Voucher\Exceptions\UnknownExecutionDriverException;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
+use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 
@@ -144,7 +145,7 @@ it('hydrates an explicit default execution instruction through the public redemp
     $voucher = issueVoucherWithExecutionDriver('default');
     $contact = makeContactForRedemption();
 
-    expect(app(\LBHurtado\Voucher\Contracts\RedeemsVouchers::class)->handle($contact, $voucher->code, ['channel' => 'sms']))
+    expect(app(RedeemsVouchers::class)->handle($contact, $voucher->code, ['channel' => 'sms']))
         ->toBeTrue()
         ->and($driver->contexts)->toHaveCount(1)
         ->and($driver->contexts[0]->voucher?->is($voucher))->toBeTrue()

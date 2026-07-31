@@ -5,8 +5,9 @@ use LBHurtado\Voucher\Data\LocationValidationResultData;
 use LBHurtado\Voucher\Data\TimeValidationResultData;
 use LBHurtado\Voucher\Data\ValidationResultsData;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
+use LBHurtado\Voucher\Models\Voucher;
 
-function createVoucher(): \LBHurtado\Voucher\Models\Voucher
+function createVoucher(): Voucher
 {
     $instructions = VoucherInstructionsData::generateFromScratch();
     $result = GenerateVouchers::run($instructions);

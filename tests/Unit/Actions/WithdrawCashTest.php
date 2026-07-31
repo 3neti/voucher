@@ -1,9 +1,9 @@
 <?php
 
+use Bavix\Wallet\Models\Transaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
 use LBHurtado\Wallet\Actions\WithdrawCash;
-use Bavix\Wallet\Models\Transaction;
 
 uses(RefreshDatabase::class);
 

@@ -2,6 +2,9 @@
 
 namespace LBHurtado\Voucher\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
+use LBHurtado\SettlementEnvelope\Models\SettlementEnvelope;
+
 /**
  * Trait HasExternalMetadata
  *
@@ -22,7 +25,7 @@ namespace LBHurtado\Voucher\Traits;
  *             This trait is preserved for backward compatibility with legacy vouchers.
  *             New payable/settlement vouchers automatically create envelopes.
  *             Run `php artisan vouchers:migrate-to-envelopes` to migrate existing vouchers.
- * @see \LBHurtado\SettlementEnvelope\Models\SettlementEnvelope::$payload
+ * @see SettlementEnvelope::$payload
  */
 trait HasExternalMetadata
 {
@@ -60,10 +63,10 @@ trait HasExternalMetadata
     /**
      * Query scope: Filter by external metadata field
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  Builder  $query
      * @param  string  $field  Field name within external metadata
      * @param  mixed  $value  Value to match
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function scopeWhereExternal($query, string $field, mixed $value)
     {
@@ -73,10 +76,10 @@ trait HasExternalMetadata
     /**
      * Query scope: Filter by multiple external metadata values
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  Builder  $query
      * @param  string  $field  Field name within external metadata
      * @param  array  $values  Values to match
-     * @return \Illuminate\Database\Eloquent\Builder
+     * @return Builder
      */
     public function scopeWhereExternalIn($query, string $field, array $values)
     {

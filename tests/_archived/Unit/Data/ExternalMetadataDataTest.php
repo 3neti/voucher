@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Validation\ValidationException;
 use LBHurtado\Voucher\Data\ExternalMetadataData;
 
 test('can create with all fields', function () {
@@ -99,4 +100,4 @@ test('validates string length limits', function () {
     ExternalMetadataData::validateAndCreate([
         'external_id' => str_repeat('a', 256), // Max 255
     ]);
-})->throws(\Illuminate\Validation\ValidationException::class);
+})->throws(ValidationException::class);

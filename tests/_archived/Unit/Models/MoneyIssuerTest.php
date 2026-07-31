@@ -1,6 +1,7 @@
 <?php
 
 use LBHurtado\Voucher\Models\MoneyIssuer;
+use LBHurtado\Voucher\Tests\database\temp\MoneyIssuerFactory;
 
 it('has fillable properties', function () {
     $moneyIssuer = MoneyIssuer::factory()->make();
@@ -28,5 +29,5 @@ it('can create a money issuer', function () {
 it('can return a factory instance', function () {
     $factory = MoneyIssuer::newFactory();
 
-    expect($factory)->toBeInstanceOf(\LBHurtado\Voucher\Tests\database\temp\MoneyIssuerFactory::class);
+    expect($factory)->toBeInstanceOf(MoneyIssuerFactory::class);
 });

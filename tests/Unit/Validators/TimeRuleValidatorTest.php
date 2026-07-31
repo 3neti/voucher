@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
 use LBHurtado\Voucher\Data\RedemptionEvidenceData;
 use LBHurtado\Voucher\Enums\RedemptionValidationCode;
@@ -73,7 +72,7 @@ it('returns no issues when redemption is within the allowed time window', functi
 
     $validator = app(TimeRuleValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toBeArray()->toHaveCount(0);
 });
@@ -95,7 +94,7 @@ it('returns an outside_time_window issue when redemption is outside the allowed 
 
     $validator = app(TimeRuleValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('time')
@@ -116,7 +115,7 @@ it('returns no issues when redemption is within the allowed duration limit', fun
 
     $validator = app(TimeRuleValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toBeArray()->toHaveCount(0);
 });
@@ -134,7 +133,7 @@ it('returns a time_limit_exceeded issue when redemption exceeds the duration lim
 
     $validator = app(TimeRuleValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toHaveCount(1)
         ->and($issues[0]->field)->toBe('time')
@@ -159,7 +158,7 @@ it('supports overnight time windows correctly', function () {
 
     $validator = app(TimeRuleValidator::class);
 
-    $issues = $validator->validate($voucher, new RedemptionEvidenceData());
+    $issues = $validator->validate($voucher, new RedemptionEvidenceData);
 
     expect($issues)->toBeArray()->toHaveCount(0);
 });

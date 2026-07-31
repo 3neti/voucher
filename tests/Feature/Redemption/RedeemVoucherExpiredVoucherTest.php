@@ -1,9 +1,11 @@
 <?php
 
-use LBHurtado\Voucher\Actions\{GenerateVouchers, RedeemVoucher};
 use Illuminate\Foundation\Testing\RefreshDatabase;
-//use LBHurtado\Contact\Models\Contact;
-//use LBHurtado\Voucher\Models\Voucher;
+use LBHurtado\Voucher\Actions\GenerateVouchers;
+use LBHurtado\Voucher\Actions\RedeemVoucher;
+
+// use LBHurtado\Contact\Models\Contact;
+// use LBHurtado\Voucher\Models\Voucher;
 
 uses(RefreshDatabase::class);
 
@@ -12,14 +14,14 @@ beforeEach(function () {
 });
 
 it('blocks redemption of an expired voucher', function () {
-//    $instructions = validInstructions();
-//    $voucher = GenerateVouchers::run($instructions)->first();
-//
-//    // Force expire
-//    Voucher::where('id', $voucher->id)->update(['expires_at' => now()->subDay()]);
-//
-//    $contact = Contact::factory()->create(['bank_account' => 'GCASH:09171234567']);
-//    $result = RedeemVoucher::run($contact, $voucher->fresh()->code);
+    //    $instructions = validInstructions();
+    //    $voucher = GenerateVouchers::run($instructions)->first();
+    //
+    //    // Force expire
+    //    Voucher::where('id', $voucher->id)->update(['expires_at' => now()->subDay()]);
+    //
+    //    $contact = Contact::factory()->create(['bank_account' => 'GCASH:09171234567']);
+    //    $result = RedeemVoucher::run($contact, $voucher->fresh()->code);
     $voucher = issueVoucher();
     $voucher->update(['expires_at' => now()->subDay()]);
 

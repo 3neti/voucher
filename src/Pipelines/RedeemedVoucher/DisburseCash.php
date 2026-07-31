@@ -2,22 +2,22 @@
 
 namespace LBHurtado\Voucher\Pipelines\RedeemedVoucher;
 
+use Closure;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
+use LBHurtado\Contact\Classes\BankAccount;
+use LBHurtado\EmiCore\Contracts\BankRegistryContract;
+use LBHurtado\EmiCore\Contracts\PayoutProvider;
+use LBHurtado\EmiCore\Data\PayoutRequestData;
+use LBHurtado\EmiCore\Enums\PayoutStatus;
+use LBHurtado\EmiCore\Enums\SettlementRail;
+use LBHurtado\Voucher\Events\DisburseInputPrepared;
 use LBHurtado\Voucher\Events\VoucherDisbursementFailed;
 use LBHurtado\Voucher\Events\VoucherDisbursementSucceeded;
 use LBHurtado\Voucher\Exceptions\InvalidSettlementRailException;
-use LBHurtado\EmiCore\Contracts\BankRegistryContract;
-use LBHurtado\Voucher\Events\DisburseInputPrepared;
-use LBHurtado\Wallet\Events\DisbursementFailed;
-use LBHurtado\EmiCore\Contracts\PayoutProvider;
-use LBHurtado\EmiCore\Data\PayoutRequestData;
-use LBHurtado\EmiCore\Enums\SettlementRail;
-use LBHurtado\Contact\Classes\BankAccount;
 use LBHurtado\Wallet\Actions\WithdrawCash;
-use LBHurtado\EmiCore\Enums\PayoutStatus;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Arr;
+use LBHurtado\Wallet\Events\DisbursementFailed;
 use RuntimeException;
-use Closure;
 
 class DisburseCash
 {

@@ -4,6 +4,7 @@ namespace LBHurtado\Voucher\Pipelines\Voucher;
 
 use Bavix\Wallet\Interfaces\Customer;
 use Closure;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Support\Facades\Log;
 use LBHurtado\Cash\Models\Cash;
 use LBHurtado\Voucher\Services\FeeCalculator;
@@ -36,7 +37,7 @@ class PersistCash
         }
 
         if (! $user instanceof Customer) {
-            throw new \Illuminate\Auth\AuthenticationException('You must implement customer to perform this action.');
+            throw new AuthenticationException('You must implement customer to perform this action.');
         }
 
         $instructions = $voucher->instructions;

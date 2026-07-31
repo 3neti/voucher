@@ -6,7 +6,6 @@ namespace LBHurtado\Voucher\Tests\Models;
 
 use Bavix\Wallet\Interfaces\Confirmable;
 use Bavix\Wallet\Interfaces\Customer;
-use Bavix\Wallet\Interfaces\Wallet;
 use Bavix\Wallet\Traits\CanConfirm;
 use Bavix\Wallet\Traits\CanPay;
 use Bavix\Wallet\Traits\HasWalletFloat;
@@ -15,7 +14,6 @@ use FrittenKeeZ\Vouchers\Concerns\HasVouchers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
 use LBHurtado\Voucher\Tests\Database\Factories\UserFactory;
 
 class User extends Authenticatable implements Confirmable, Customer

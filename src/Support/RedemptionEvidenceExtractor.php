@@ -17,7 +17,7 @@ class RedemptionEvidenceExtractor
 
         $metadata = $this->normalize($redeemerRecord?->metadata);
         $redemption = Arr::get($metadata, 'redemption', []);
-//        $inputs = Arr::get($metadata, 'inputs', []);
+        //        $inputs = Arr::get($metadata, 'inputs', []);
         $inputs = $this->normalize(Arr::get($metadata, 'inputs', []));
 
         if ($inputs === []) {

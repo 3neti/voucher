@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use LBHurtado\Cash\Models\Cash;
 use LBHurtado\Voucher\Actions\GenerateVouchers;
 use LBHurtado\Voucher\Pipelines\GeneratedVouchers\ApplyUsageLimits;
 use LBHurtado\Voucher\Pipelines\GeneratedVouchers\CreateCashEntities;
@@ -60,7 +61,7 @@ it('persists lifecycle fields during issuance', function () {
 it('persists amount and remaining amount during issuance', function () {
     $instructions = validInstructions();
     $voucher = GenerateVouchers::run($instructions)->first();
-    $cash = $voucher->getEntities(\LBHurtado\Cash\Models\Cash::class)->first();
+    $cash = $voucher->getEntities(Cash::class)->first();
 
     expect($cash)->not->toBeNull();
     expect((float) $cash->amount->getAmount()->toFloat())->toBeGreaterThan(0);
@@ -70,7 +71,7 @@ it('completes post-generation processing and attaches minted cash', function () 
     $voucher = GenerateVouchers::run(validInstructions())->first();
 
     expect($voucher->refresh()->processed)->toBeTrue()
-        ->and($voucher->getEntities(\LBHurtado\Cash\Models\Cash::class))->toHaveCount(1);
+        ->and($voucher->getEntities(Cash::class))->toHaveCount(1);
 });
 
 it('persists metadata during issuance', function () {

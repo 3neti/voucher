@@ -6,21 +6,28 @@ use FrittenKeeZ\Vouchers\Models\Redeemer;
 use FrittenKeeZ\Vouchers\Models\Voucher as BaseVoucher;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use LBHurtado\Cash\Models\Cash;
 use LBHurtado\Contact\Models\Contact;
 use LBHurtado\ModelInput\Contracts\InputInterface;
 use LBHurtado\ModelInput\Traits\HasInputs;
+use LBHurtado\SettlementEnvelope\Models\SettlementEnvelope;
 use LBHurtado\SettlementEnvelope\Traits\HasEnvelopes;
+use LBHurtado\Voucher\Data\ExternalMetadataData;
+use LBHurtado\Voucher\Data\ValidationResultsData;
 use LBHurtado\Voucher\Data\VoucherData;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
+use LBHurtado\Voucher\Data\VoucherTimingData;
 use LBHurtado\Voucher\Enums\VoucherState;
 use LBHurtado\Voucher\Enums\VoucherType;
 use LBHurtado\Voucher\Observers\VoucherObserver;
 use LBHurtado\Voucher\Traits\HasExternalMetadata;
 use LBHurtado\Voucher\Traits\HasValidationResults;
 use LBHurtado\Voucher\Traits\HasVoucherTiming;
+use LBHurtado\XChange\Models\VoucherClaim;
 use Spatie\LaravelData\WithData;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
@@ -30,7 +37,7 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  *
  * @property int $id
  * @property string $code
- * @property \Illuminate\Database\Eloquent\Model $owner
+ * @property Model $owner
  * @property array $metadata
  * @property Carbon $starts_at
  * @property Carbon $expires_at
@@ -38,14 +45,14 @@ use Spatie\MediaLibrary\InteractsWithMedia;
  * @property Carbon $processed_on
  * @property bool $processed
  * @property VoucherInstructionsData $instructions
- * @property \FrittenKeeZ\Vouchers\Models\Redeemer $redeemer
- * @property \Illuminate\Database\Eloquent\Collection $voucherEntities
- * @property \Illuminate\Database\Eloquent\Collection $redeemers
+ * @property Redeemer $redeemer
+ * @property Collection $voucherEntities
+ * @property Collection $redeemers
  * @property Cash $cash
  * @property Contact $contact
- * @property \LBHurtado\Voucher\Data\ExternalMetadataData $external_metadata
- * @property \LBHurtado\Voucher\Data\VoucherTimingData $timing
- * @property \LBHurtado\Voucher\Data\ValidationResultsData $validation_results
+ * @property ExternalMetadataData $external_metadata
+ * @property VoucherTimingData $timing
+ * @property ValidationResultsData $validation_results
  *
  * @method int getKey()
  */
@@ -110,7 +117,7 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
      *             - Audit trail for all changes
      *             New payable/settlement vouchers automatically create envelopes.
      *             Run `php artisan vouchers:migrate-to-envelopes` to migrate existing vouchers.
-     * @see \LBHurtado\SettlementEnvelope\Models\SettlementEnvelope::attachments()
+     * @see SettlementEnvelope::attachments()
      */
     public function registerMediaCollections(): void
     {
@@ -437,7 +444,7 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
 
     public function claims(): HasMany
     {
-        return $this->hasMany(\LBHurtado\XChange\Models\VoucherClaim::class)
+        return $this->hasMany(VoucherClaim::class)
             ->orderBy('claim_number');
     }
 }

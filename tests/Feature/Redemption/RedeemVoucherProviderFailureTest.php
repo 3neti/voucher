@@ -1,8 +1,9 @@
 <?php
 
-use LBHurtado\Voucher\Actions\{GenerateVouchers, RedeemVoucher};
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use LBHurtado\Contact\Models\Contact;
+use LBHurtado\Voucher\Actions\GenerateVouchers;
+use LBHurtado\Voucher\Actions\RedeemVoucher;
 
 uses(RefreshDatabase::class);
 

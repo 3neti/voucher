@@ -11,13 +11,14 @@
 |
 */
 
-use LBHurtado\Voucher\Tests\TestCase;
+use Illuminate\Support\Str;
+use LBHurtado\Contact\Models\Contact;
+use LBHurtado\EmiCore\Data\PayoutResultData;
+use LBHurtado\EmiCore\Enums\PayoutStatus;
 use LBHurtado\Voucher\Actions\GenerateVouchers;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Tests\Fakes\FakePayoutProvider;
-use LBHurtado\EmiCore\Data\PayoutResultData;
-use LBHurtado\EmiCore\Enums\PayoutStatus;
-use LBHurtado\Contact\Models\Contact;
+use LBHurtado\Voucher\Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Unit', 'Feature');
 
@@ -156,7 +157,7 @@ function makeContactForRedemption(
 
 function fakePayoutProvider(): FakePayoutProvider
 {
-    /** @var \LBHurtado\Voucher\Tests\TestCase $test */
+    /** @var TestCase $test */
     $test = test();
 
     return $test->fakePayoutProvider()->reset();
@@ -169,7 +170,7 @@ function fakeSuccessfulPayoutResult(
 ): PayoutResultData {
     return new PayoutResultData(
         transaction_id: $transactionId ?? 'TXN-SUCCESS',
-        uuid: $uuid ?? (string) \Illuminate\Support\Str::uuid(),
+        uuid: $uuid ?? (string) Str::uuid(),
         status: PayoutStatus::COMPLETED,
         provider: $provider,
     );
@@ -182,7 +183,7 @@ function fakeFailedPayoutResult(
 ): PayoutResultData {
     return new PayoutResultData(
         transaction_id: $transactionId ?? 'TXN-FAILED',
-        uuid: $uuid ?? (string) \Illuminate\Support\Str::uuid(),
+        uuid: $uuid ?? (string) Str::uuid(),
         status: PayoutStatus::FAILED,
         provider: $provider,
     );
@@ -192,11 +193,10 @@ function fakePendingPayoutResult(
     ?string $transactionId = null,
     ?string $uuid = null,
     ?string $provider = 'fake'
-): PayoutResultData
-{
+): PayoutResultData {
     return new PayoutResultData(
         transaction_id: $transactionId ?? 'TXN-PENDING',
-        uuid: $uuid ?? (string)\Illuminate\Support\Str::uuid(),
+        uuid: $uuid ?? (string) Str::uuid(),
         status: PayoutStatus::PENDING,
         provider: $provider,
     );

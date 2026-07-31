@@ -1,5 +1,7 @@
 <?php
 
+use LBHurtado\Voucher\Data\CashInstructionData;
+use LBHurtado\Voucher\Data\CashValidationRulesData;
 use LBHurtado\Voucher\Data\RedemptionContext;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Specifications\SecretSpecification;
@@ -8,9 +10,9 @@ describe('SecretSpecification', function () {
     it('returns true when secret matches', function () {
         // Create a mock voucher with instructions
         $instructions = new VoucherInstructionsData(
-            cash: new \LBHurtado\Voucher\Data\CashInstructionData(
+            cash: new CashInstructionData(
                 amount: 100,
-                validation: new \LBHurtado\Voucher\Data\CashValidationRulesData(
+                validation: new CashValidationRulesData(
                     secret: 'ABC123',
                     mobile: null,
                     payable: null,
@@ -38,9 +40,9 @@ describe('SecretSpecification', function () {
 
     it('returns false when secret does not match', function () {
         $instructions = new VoucherInstructionsData(
-            cash: new \LBHurtado\Voucher\Data\CashInstructionData(
+            cash: new CashInstructionData(
                 amount: 100,
-                validation: new \LBHurtado\Voucher\Data\CashValidationRulesData(
+                validation: new CashValidationRulesData(
                     secret: 'ABC123',
                     mobile: null,
                     payable: null,
@@ -68,9 +70,9 @@ describe('SecretSpecification', function () {
 
     it('returns false when context secret is null but voucher requires it', function () {
         $instructions = new VoucherInstructionsData(
-            cash: new \LBHurtado\Voucher\Data\CashInstructionData(
+            cash: new CashInstructionData(
                 amount: 100,
-                validation: new \LBHurtado\Voucher\Data\CashValidationRulesData(
+                validation: new CashValidationRulesData(
                     secret: 'ABC123',
                     mobile: null,
                     payable: null,
@@ -98,9 +100,9 @@ describe('SecretSpecification', function () {
 
     it('returns true when voucher does not require secret', function () {
         $instructions = new VoucherInstructionsData(
-            cash: new \LBHurtado\Voucher\Data\CashInstructionData(
+            cash: new CashInstructionData(
                 amount: 100,
-                validation: new \LBHurtado\Voucher\Data\CashValidationRulesData(
+                validation: new CashValidationRulesData(
                     secret: null,
                     mobile: null,
                     payable: null,

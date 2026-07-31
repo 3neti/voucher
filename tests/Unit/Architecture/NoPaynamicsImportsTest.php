@@ -6,7 +6,9 @@ it('contains no paynamics namespace imports in voucher source', function () {
     $violations = [];
 
     foreach ($files as $file) {
-        if ($file->getExtension() !== 'php') continue;
+        if ($file->getExtension() !== 'php') {
+            continue;
+        }
         $content = file_get_contents($file->getPathname());
         if (preg_match('/use\s+LBHurtado\\\\EmiPaynamicsConstellation\\\\/', $content)) {
             $violations[] = str_replace($srcDir.'/', '', $file->getPathname());

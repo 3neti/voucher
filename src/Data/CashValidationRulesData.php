@@ -3,6 +3,7 @@
 namespace LBHurtado\Voucher\Data;
 
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
+use Propaganistas\LaravelPhone\Rules\Phone;
 use Spatie\LaravelData\Data;
 
 class CashValidationRulesData extends Data
@@ -29,7 +30,7 @@ class CashValidationRulesData extends Data
                 config('instructions.cash.validation_rules.secret'),
             ],
             'mobile' => [
-                ['required', (new \Propaganistas\LaravelPhone\Rules\Phone)->country('PH')->type('mobile')],
+                ['required', (new Phone)->country('PH')->type('mobile')],
                 config('instructions.cash.validation_rules.mobile'),
             ],
             'payable' => [

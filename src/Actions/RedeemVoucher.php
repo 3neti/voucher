@@ -20,12 +20,6 @@ class RedeemVoucher implements RedeemsVouchers
 
     /**
      * Attempt to redeem a voucher for a given contact.
-     *
-     * @param  Contact  $contact
-     * @param  string  $voucher_code
-     * @param  array  $meta
-     * @return bool
-     *
      */
     public function handle(Contact $contact, string $voucher_code, array $meta = []): bool
     {

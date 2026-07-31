@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use LBHurtado\Voucher\Actions\RedeemVoucher;
 
 uses(RefreshDatabase::class);
 

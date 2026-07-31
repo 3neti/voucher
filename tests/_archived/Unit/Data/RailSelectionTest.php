@@ -3,6 +3,7 @@
 use LBHurtado\EmiCore\Enums\SettlementRail;
 use LBHurtado\Voucher\Data\CashInstructionData;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
+use Spatie\LaravelData\Exceptions\CannotCastEnum;
 
 test('cash instruction data includes settlement rail and fee strategy', function () {
     $cashData = CashInstructionData::from([
@@ -88,7 +89,7 @@ test('rail selection validates enum values', function () {
             'location' => null,
             'radius' => null,
         ],
-    ]))->toThrow(\Spatie\LaravelData\Exceptions\CannotCastEnum::class);
+    ]))->toThrow(CannotCastEnum::class);
 });
 
 test('fee strategy validates enum values', function () {

@@ -20,11 +20,11 @@ class ValidationInstructionData extends Data
 
     public function __construct(
         public ?SignatureValidationInstructionData $signature = null,
-        public ?SelfieValidationInstructionData    $selfie = null,
-        public ?LocationValidationInstructionData  $location = null,
-        public ?OtpValidationInstructionData       $otp = null,
+        public ?SelfieValidationInstructionData $selfie = null,
+        public ?LocationValidationInstructionData $location = null,
+        public ?OtpValidationInstructionData $otp = null,
         public ?FaceMatchValidationInstructionData $face_match = null,
-        public ?TimeValidationInstructionData      $time = null,
+        public ?TimeValidationInstructionData $time = null,
     ) {
         $this->applyRulesAndDefaults();
     }

@@ -2,9 +2,9 @@
 
 namespace LBHurtado\Voucher;
 
-use LBHurtado\Voucher\Providers\EventServiceProvider;
-use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Number;
+use Illuminate\Support\ServiceProvider;
+use LBHurtado\ReportRegistry\Contracts\ReportResolverInterface;
 use LBHurtado\Voucher\Actions\GenerateVouchers;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
 use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
@@ -12,6 +12,7 @@ use LBHurtado\Voucher\Contracts\GeneratesVouchers;
 use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway;
 use LBHurtado\Voucher\Contracts\StoredValueExecutionGateway;
+use LBHurtado\Voucher\Providers\EventServiceProvider;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionPipelineRuntime;
@@ -94,7 +95,7 @@ class VoucherServiceProvider extends ServiceProvider
         });
 
         // Register report driver source path (used by report:install-drivers)
-        if (interface_exists(\LBHurtado\ReportRegistry\Contracts\ReportResolverInterface::class)) {
+        if (interface_exists(ReportResolverInterface::class)) {
             $sources = $this->app['config']->get('report-registry.driver_sources', []);
             $sources[] = __DIR__.'/../resources/report-drivers';
             $this->app['config']->set('report-registry.driver_sources', $sources);

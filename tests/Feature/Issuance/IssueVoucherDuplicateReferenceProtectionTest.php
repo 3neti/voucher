@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use LBHurtado\Voucher\Models\Voucher;
 
 uses(RefreshDatabase::class);
 
@@ -20,12 +21,12 @@ it('rejects duplicate voucher codes when uniqueness is required', function () {
 });
 
 it('does not partially persist duplicate issuance attempts', function () {
-    $countBefore = \LBHurtado\Voucher\Models\Voucher::count();
+    $countBefore = Voucher::count();
 
     issueVoucher();
     issueVoucher();
 
-    $countAfter = \LBHurtado\Voucher\Models\Voucher::count();
+    $countAfter = Voucher::count();
 
     expect($countAfter - $countBefore)->toBe(2);
 });

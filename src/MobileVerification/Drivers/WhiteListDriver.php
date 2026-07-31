@@ -112,7 +112,7 @@ class WhiteListDriver implements MobileVerificationDriverInterface
             $sources[] = 'inline';
         }
         if (! empty($context['file'])) {
-            $sources[] = 'csv:' . $context['file'];
+            $sources[] = 'csv:'.$context['file'];
         }
 
         return implode('+', $sources) ?: 'none';

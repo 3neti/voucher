@@ -4,7 +4,7 @@ namespace LBHurtado\Voucher\Actions;
 
 use Carbon\CarbonInterval;
 use FrittenKeeZ\Vouchers\Facades\Vouchers;
-use Illuminate\Support\Carbon;
+use FrittenKeeZ\Vouchers\Models\Voucher;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -50,9 +50,9 @@ class GenerateVouchers implements GeneratesVouchers
             $mask = '****';
         }
 
-//        $ttl = $instructions->ttl instanceof CarbonInterval
-//            ? $instructions->ttl
-//            : CarbonInterval::hours(12); // Default TTL to 12 hours if missing
+        //        $ttl = $instructions->ttl instanceof CarbonInterval
+        //            ? $instructions->ttl
+        //            : CarbonInterval::hours(12); // Default TTL to 12 hours if missing
 
         if (self::DEBUG) {
             Log::debug('[GenerateVouchers] About to create', compact('count', 'prefix', 'mask', 'ttl'));
@@ -78,20 +78,21 @@ class GenerateVouchers implements GeneratesVouchers
             $voucherBuilder->withStartTime($instructions->starts_at);
         }
 
-// ✅ EXPIRE TIME (priority 1)
+        // ✅ EXPIRE TIME (priority 1)
         if ($instructions->expires_at) {
             $voucherBuilder->withExpireTime($instructions->expires_at);
         } elseif ($instructions->ttl) {
             $voucherBuilder->withExpireTimeIn($instructions->ttl);
-        } else
-            $voucherBuilder->withExpireTimeIn(CarbonInterval::hours(12)); //TODO: make this configurable
+        } else {
+            $voucherBuilder->withExpireTimeIn(CarbonInterval::hours(12));
+        } // TODO: make this configurable
 
         $vouchers = $voucherBuilder->create($count);
         if (self::DEBUG) {
             Log::debug('[GenerateVouchers] Raw facade response', ['raw' => $vouchers]);
         }
 
-        /** @var \Illuminate\Support\Collection<int, \FrittenKeeZ\Vouchers\Models\Voucher> $collection */
+        /** @var Collection<int, Voucher> $collection */
         $collection = collect(is_array($vouchers) ? $vouchers : [$vouchers]);
 
         if (self::DEBUG) {

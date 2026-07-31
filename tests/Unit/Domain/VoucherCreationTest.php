@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Date;
 use LBHurtado\Voucher\Enums\VoucherState;
 use LBHurtado\Voucher\Models\Voucher;
 
@@ -122,7 +123,7 @@ it('persists starts_at and expires_at together on generated voucher', function (
 
 it('computes expires_at from ttl when explicit expires_at is absent', function () {
     $now = now()->startOfSecond();
-    \Illuminate\Support\Facades\Date::setTestNow($now);
+    Date::setTestNow($now);
 
     $instructions = validVoucherInstructions(overrides: [
         'ttl' => 'PT2H',
@@ -153,7 +154,7 @@ it('prefers explicit expires_at over ttl', function () {
 
 it('applies the default 12 hour expiry when no ttl or expires_at is provided', function () {
     $now = now()->startOfSecond();
-    \Illuminate\Support\Facades\Date::setTestNow($now);
+    Date::setTestNow($now);
 
     $voucher = issueVoucher();
     $voucher->refresh();

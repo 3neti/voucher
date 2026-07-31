@@ -122,5 +122,5 @@ test('external metadata does not interfere with instructions', function () {
 
     // Both should be accessible
     expect($this->voucher->external_metadata->external_id)->toBe('EXT-004')
-        ->and($this->voucher->instructions)->toBeInstanceOf(\LBHurtado\Voucher\Data\VoucherInstructionsData::class);
+        ->and($this->voucher->instructions)->toBeInstanceOf(VoucherInstructionsData::class);
 });

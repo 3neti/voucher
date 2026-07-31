@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use LBHurtado\Cash\Models\Cash;
+use LBHurtado\Voucher\Actions\GenerateVouchers;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
 use LBHurtado\Voucher\Enums\VoucherInputField;
 use LBHurtado\Voucher\Events\VouchersGenerated;
@@ -129,7 +130,7 @@ it('does not process vouchers that are already marked as processed', function (V
 })->with('voucher_instructions');
 
 it('assigns the authenticated user as the owner of the vouchers', function (VoucherInstructionsData $instructions) {
-    $generateVouchersAction = app(LBHurtado\Voucher\Actions\GenerateVouchers::class);
+    $generateVouchersAction = app(GenerateVouchers::class);
     $vouchers = $generateVouchersAction->handle($instructions);
     // Assert: Confirm Vouchers have the correct owner
     foreach ($vouchers as $voucher) {

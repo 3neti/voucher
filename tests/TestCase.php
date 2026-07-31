@@ -2,14 +2,34 @@
 
 namespace LBHurtado\Voucher\Tests;
 
+use Dotenv\Dotenv;
+use FrittenKeeZ\Vouchers\VouchersServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Route;
+// use LBHurtado\Voucher\Models\MoneyIssuer;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Number;
+use LBHurtado\Cash\CashServiceProvider;
+use LBHurtado\Contact\ContactServiceProvider;
 use LBHurtado\EmiCore\Contracts\PayoutProvider;
-//use LBHurtado\Voucher\Models\MoneyIssuer;
+use LBHurtado\EmiCore\EmiCoreServiceProvider;
+use LBHurtado\ModelInput\ModelInputServiceProvider;
+use LBHurtado\SettlementEnvelope\SettlementEnvelopeServiceProvider;
+use LBHurtado\Voucher\Models\Voucher;
 use LBHurtado\Voucher\Tests\Fakes\FakePayoutProvider;
 use LBHurtado\Voucher\Tests\Models\User;
+use LBHurtado\Voucher\VoucherServiceProvider;
+use LBHurtado\Wallet\Actions\TopupWalletAction;
+use LBHurtado\Wallet\WalletServiceProvider;
 use Orchestra\Testbench\TestCase as BaseTestCase;
+use Spatie\LaravelData\LaravelDataServiceProvider;
+use Spatie\LaravelData\Normalizers\ArrayableNormalizer;
+use Spatie\LaravelData\Normalizers\ArrayNormalizer;
+use Spatie\LaravelData\Normalizers\JsonNormalizer;
+use Spatie\LaravelData\Normalizers\ModelNormalizer;
+use Spatie\LaravelData\Normalizers\ObjectNormalizer;
+use Spatie\ModelStatus\Status;
+use Spatie\SchemalessAttributes\SchemalessAttributesServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -19,9 +39,9 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-//        Factory::guessFactoryNamesUsing(
-//            fn (string $modelName) => 'LBHurtado\\Voucher\\Database\\Factories\\'.class_basename($modelName).'Factory'
-//        );
+        //        Factory::guessFactoryNamesUsing(
+        //            fn (string $modelName) => 'LBHurtado\\Voucher\\Database\\Factories\\'.class_basename($modelName).'Factory'
+        //        );
 
         if (! defined('TESTING_PACKAGE_PATH')) {
             define('TESTING_PACKAGE_PATH', __DIR__.'/../resources/documents');
@@ -44,23 +64,23 @@ abstract class TestCase extends BaseTestCase
     protected function getPackageProviders($app): array
     {
         $providers = [
-            \FrittenKeeZ\Vouchers\VouchersServiceProvider::class,
-            \LBHurtado\Voucher\VoucherServiceProvider::class,
-            \LBHurtado\Wallet\WalletServiceProvider::class,
+            VouchersServiceProvider::class,
+            VoucherServiceProvider::class,
+            WalletServiceProvider::class,
             \Bavix\Wallet\WalletServiceProvider::class,
-            \LBHurtado\EmiCore\EmiCoreServiceProvider::class,
-            \LBHurtado\Contact\ContactServiceProvider::class,
-            \LBHurtado\Cash\CashServiceProvider::class,
-            \Spatie\LaravelData\LaravelDataServiceProvider::class,
-            \Spatie\SchemalessAttributes\SchemalessAttributesServiceProvider::class,
+            EmiCoreServiceProvider::class,
+            ContactServiceProvider::class,
+            CashServiceProvider::class,
+            LaravelDataServiceProvider::class,
+            SchemalessAttributesServiceProvider::class,
         ];
 
-        if (class_exists(\LBHurtado\ModelInput\ModelInputServiceProvider::class)) {
-            $providers[] = \LBHurtado\ModelInput\ModelInputServiceProvider::class;
+        if (class_exists(ModelInputServiceProvider::class)) {
+            $providers[] = ModelInputServiceProvider::class;
         }
 
-        if (class_exists(\LBHurtado\SettlementEnvelope\SettlementEnvelopeServiceProvider::class)) {
-            $providers[] = \LBHurtado\SettlementEnvelope\SettlementEnvelopeServiceProvider::class;
+        if (class_exists(SettlementEnvelopeServiceProvider::class)) {
+            $providers[] = SettlementEnvelopeServiceProvider::class;
         }
 
         return $providers;
@@ -74,16 +94,16 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('data.max_transformation_depth', 6);
         $app['config']->set('data.throw_when_max_transformation_depth_reached', 6);
         $app['config']->set('data.normalizers', [
-            \Spatie\LaravelData\Normalizers\ModelNormalizer::class,
-            \Spatie\LaravelData\Normalizers\ArrayableNormalizer::class,
-            \Spatie\LaravelData\Normalizers\ObjectNormalizer::class,
-            \Spatie\LaravelData\Normalizers\ArrayNormalizer::class,
-            \Spatie\LaravelData\Normalizers\JsonNormalizer::class,
+            ModelNormalizer::class,
+            ArrayableNormalizer::class,
+            ObjectNormalizer::class,
+            ArrayNormalizer::class,
+            JsonNormalizer::class,
         ]);
-        $app['config']->set('data.date_format', "Y-m-d\\TH:i:sP");
+        $app['config']->set('data.date_format', 'Y-m-d\\TH:i:sP');
 
-        $app['config']->set('model-status.status_model', \Spatie\ModelStatus\Status::class);
-        $app['config']->set('vouchers.models.voucher', \LBHurtado\Voucher\Models\Voucher::class);
+        $app['config']->set('model-status.status_model', Status::class);
+        $app['config']->set('vouchers.models.voucher', Voucher::class);
 
         $app['config']->set('instructions.feedback.mobile', '09171234567');
         $app['config']->set('instructions.feedback.email', 'example@example.com');
@@ -95,7 +115,7 @@ abstract class TestCase extends BaseTestCase
         $app['config']->set('account.system_user.identifier_column', 'email');
         $app['config']->set('account.system_user.model', User::class);
 
-        \Illuminate\Support\Facades\Route::get('/redeem', fn () => 'ok')->name('redeem.start');
+        Route::get('/redeem', fn () => 'ok')->name('redeem.start');
 
         Number::useCurrency('PHP');
     }
@@ -110,7 +130,7 @@ abstract class TestCase extends BaseTestCase
         // Runtime voucher schema owned by 3neti/laravel-vouchers.
         if (! Schema::hasTable('vouchers')) {
             $this->runMigrationDirectory(
-                $this->getPackageMigrationPath(\FrittenKeeZ\Vouchers\VouchersServiceProvider::class)
+                $this->getPackageMigrationPath(VouchersServiceProvider::class)
             );
         }
 
@@ -124,14 +144,14 @@ abstract class TestCase extends BaseTestCase
         // Cash schema owned by 3neti/cash
         if (! Schema::hasTable('cash')) {
             $this->runMigrationDirectory(
-                $this->getPackageMigrationPath(\LBHurtado\Cash\CashServiceProvider::class)
+                $this->getPackageMigrationPath(CashServiceProvider::class)
             );
         }
 
         // Cash schema owned by 3neti/contact
         if (! Schema::hasTable('contacts')) {
             $this->runMigrationDirectory(
-                $this->getPackageMigrationPath(\LBHurtado\Contact\ContactServiceProvider::class)
+                $this->getPackageMigrationPath(ContactServiceProvider::class)
             );
         }
     }
@@ -160,9 +180,9 @@ abstract class TestCase extends BaseTestCase
         $root = dirname($reflection->getFileName(), 2);
 
         foreach ([
-                     $root.'/database/migrations',
-                     $root.'/database',
-                 ] as $candidate) {
+            $root.'/database/migrations',
+            $root.'/database',
+        ] as $candidate) {
             if (is_dir($candidate)) {
                 return $candidate;
             }
@@ -207,7 +227,7 @@ abstract class TestCase extends BaseTestCase
         ]);
 
         $this->actingAs($user);
-        \LBHurtado\Wallet\Actions\TopupWalletAction::run($user, 100_000);
+        TopupWalletAction::run($user, 100_000);
     }
 
     protected function loadEnvironment(): void
@@ -215,7 +235,7 @@ abstract class TestCase extends BaseTestCase
         $path = __DIR__.'/../.env';
 
         if (file_exists($path)) {
-            \Dotenv\Dotenv::createImmutable(dirname($path), '.env')->load();
+            Dotenv::createImmutable(dirname($path), '.env')->load();
         }
     }
 }

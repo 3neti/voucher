@@ -43,24 +43,15 @@
             "dev-main": "1.x-dev"
         }
     },
-    "repositories": [
-        {
-            "type": "path",
-            "url": "/Users/rli/PhpstormProjects/packages/cash",
-            "options": {
-                "symlink": true
-            }
-        }
-    ],
     "require": {
-        "php": "^8.2",
-        "3neti/cash": "dev-main",
-        "3neti/contact": "^1.0",
-        "3neti/emi-core": "^1.0",
-        "3neti/laravel-model-input": "^1.0",
-        "3neti/laravel-vouchers": "^1.0.0",
-        "3neti/settlement-envelope": "^1.0.2",
-        "3neti/wallet": "^1.0",
+        "php": "^8.3",
+        "3neti/cash": "^1.3",
+        "3neti/contact": "^1.2",
+        "3neti/emi-core": "^2.0@beta",
+        "3neti/laravel-model-input": "^1.2",
+        "3neti/laravel-vouchers": "^1.2",
+        "3neti/settlement-envelope": "^1.2",
+        "3neti/wallet": "^2.0@beta",
         "brick/money": "^0.10.1",
         "lorisleiva/laravel-actions": "^2.9",
         "propaganistas/laravel-phone": "^6.0",
@@ -72,11 +63,13 @@
         "3neti/report-registry": "Required for built-in voucher report resolvers and YAML report drivers"
     },
     "require-dev": {
-        "orchestra/testbench": "^10.3",
-        "pestphp/pest": "^3.8",
-        "pestphp/pest-plugin-laravel": "^3.2"
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^10.3 || ^11.0",
+        "pestphp/pest": "^3.8 || ^4.0",
+        "pestphp/pest-plugin-laravel": "^3.2 || ^4.0"
     },
     "scripts": {
+        "pint": "vendor/bin/pint",
         "test": "vendor/bin/pest",
         "test:coverage": "vendor/bin/pest --coverage"
     },
@@ -88,6 +81,6 @@
             "php-http/discovery": true
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }

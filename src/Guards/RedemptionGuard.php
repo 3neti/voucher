@@ -31,25 +31,17 @@ class RedemptionGuard
     /**
      * Check if redemption is allowed based on voucher instructions and context.
      *
-     * Critical Logic:
-     * - B2B vouchers (with payable): ONLY validate payable, skip all others
-     * - Standard vouchers (no payable): Validate all applicable rules
+     * Vendor matching composes with every other configured claim safeguard.
      */
     public function check(object $voucher, RedemptionContext $context): ValidationResult
     {
         $failures = [];
 
-        // B2B Voucher - ONLY validate payable
         if (($voucher->instructions->cash->validation->payable ?? null) !== null) {
             if (! $this->payableSpec->passes($voucher, $context)) {
                 $failures[] = 'payable';
             }
-
-            // Skip ALL other validations for B2B vouchers
-            return new ValidationResult(empty($failures), $failures);
         }
-
-        // Standard Voucher - Validate ALL applicable rules
 
         // Cash validation rules
         if (($voucher->instructions->cash->validation->secret ?? null) !== null) {

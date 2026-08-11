@@ -255,9 +255,24 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
         return $this->state === VoucherState::CLOSED;
     }
 
+    public function isCancelled(): bool
+    {
+        return $this->state === VoucherState::CANCELLED;
+    }
+
+    public function isTerminal(): bool
+    {
+        return in_array($this->state, [
+            VoucherState::CLOSED,
+            VoucherState::CANCELLED,
+            VoucherState::EXPIRED,
+        ], true);
+    }
+
     public function isExpired(): bool
     {
-        return $this->expires_at && $this->expires_at->isPast();
+        return $this->state === VoucherState::EXPIRED
+            || ($this->expires_at !== null && $this->expires_at->isPast());
     }
 
     /**

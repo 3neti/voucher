@@ -31,7 +31,27 @@ it('rejects redemption when the voucher is locked cancelled or closed', function
 
     expect($locked->fresh()->canRedeem())->toBeFalse()
         ->and($closed->fresh()->canRedeem())->toBeFalse()
-        ->and($cancelled->fresh()->canRedeem())->toBeFalse();
+        ->and($cancelled->fresh()->canRedeem())->toBeFalse()
+        ->and($locked->fresh()->isTerminal())->toBeFalse()
+        ->and($closed->fresh()->isClosed())->toBeTrue()
+        ->and($closed->fresh()->isCancelled())->toBeFalse()
+        ->and($closed->fresh()->isTerminal())->toBeTrue()
+        ->and($cancelled->fresh()->isClosed())->toBeFalse()
+        ->and($cancelled->fresh()->isCancelled())->toBeTrue()
+        ->and($cancelled->fresh()->isTerminal())->toBeTrue();
+});
+
+it('recognizes an explicitly expired lifecycle state without relying on the timestamp', function () {
+    $voucher = issueVoucher();
+    $voucher->update([
+        'state' => VoucherState::EXPIRED,
+        'expires_at' => now()->addDay(),
+    ]);
+
+    expect($voucher->fresh()->isExpired())->toBeTrue()
+        ->and($voucher->fresh()->isTerminal())->toBeTrue()
+        ->and($voucher->fresh()->canRedeem())->toBeFalse()
+        ->and($voucher->fresh()->display_status)->toBe('expired');
 });
 
 it('does not allow a redeemed voucher to return to a redeemable condition', function () {

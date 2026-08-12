@@ -108,7 +108,8 @@ it('summarizes execution-relevant instructions in deterministic badge order', fu
         ['key' => 'account_funding', 'label' => 'Account funding'],
         ['key' => 'settlement_rail', 'label' => 'PESONet'],
         ['key' => 'divisible', 'label' => 'Divisible · 3 slices'],
-        ['key' => 'inputs', 'label' => 'Inputs · 2'],
+        ['key' => 'input_name', 'label' => 'Name'],
+        ['key' => 'input_email', 'label' => 'Email'],
         ['key' => 'otp', 'label' => 'OTP'],
         ['key' => 'selfie', 'label' => 'Selfie'],
         ['key' => 'signature', 'label' => 'Signature'],
@@ -116,4 +117,49 @@ it('summarizes execution-relevant instructions in deterministic badge order', fu
         ['key' => 'face_match', 'label' => 'Face match'],
         ['key' => 'time', 'label' => 'Time-bound'],
     ]);
+});
+
+it('explodes input fields into safe badges and deduplicates structured validations', function () {
+    $instructions = validVoucherInstructions(overrides: [
+        'inputs' => [
+            'fields' => [
+                'mobile',
+                'email',
+                'name',
+                'otp',
+                'selfie',
+                'signature',
+                'location',
+                'kyc',
+            ],
+        ],
+        'validation' => [
+            'otp' => ['required' => true],
+            'selfie' => ['required' => true],
+            'signature' => ['required' => true],
+            'location' => [
+                'required' => true,
+                'target_lat' => 14.5995,
+                'target_lng' => 120.9842,
+                'radius_meters' => 100,
+                'on_failure' => 'block',
+            ],
+        ],
+    ]);
+
+    $badges = VoucherOperationalSummaryData::fromInstructions($instructions)->instruction_badges;
+
+    expect($badges)->toBe([
+        ['key' => 'settlement_rail', 'label' => 'InstaPay'],
+        ['key' => 'input_mobile', 'label' => 'Mobile'],
+        ['key' => 'input_email', 'label' => 'Email'],
+        ['key' => 'input_name', 'label' => 'Name'],
+        ['key' => 'otp', 'label' => 'OTP'],
+        ['key' => 'selfie', 'label' => 'Selfie'],
+        ['key' => 'signature', 'label' => 'Signature'],
+        ['key' => 'location', 'label' => 'Location'],
+        ['key' => 'input_kyc', 'label' => 'KYC'],
+    ])
+        ->and(collect($badges)->pluck('key')->duplicates())->toBeEmpty()
+        ->and(collect($badges)->pluck('label'))->not->toContain('Inputs · 8');
 });

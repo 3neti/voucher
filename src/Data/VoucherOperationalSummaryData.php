@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace LBHurtado\Voucher\Data;
 
+use LBHurtado\Voucher\Enums\VoucherInputField;
 use LBHurtado\Voucher\Enums\VoucherType;
 use Spatie\LaravelData\Data;
 
@@ -68,13 +69,16 @@ final class VoucherOperationalSummaryData extends Data
             self::appendBadge($badges, true, 'divisible', $sliceLabel);
         }
 
-        $inputCount = count($instructions->inputs->fields ?? []);
-        self::appendBadge(
-            $badges,
-            $inputCount > 0,
-            'inputs',
-            trans_choice('Input · :count|Inputs · :count', $inputCount, ['count' => $inputCount]),
-        );
+        foreach ($instructions->inputs->fields ?? [] as $field) {
+            if ($field instanceof VoucherInputField) {
+                self::appendBadge(
+                    $badges,
+                    true,
+                    self::inputBadgeKey($field),
+                    self::inputBadgeLabel($field),
+                );
+            }
+        }
 
         $validation = $instructions->validation;
 
@@ -132,7 +136,7 @@ final class VoucherOperationalSummaryData extends Data
         string $key,
         string $label,
     ): void {
-        if (! $condition) {
+        if (! $condition || collect($badges)->contains('key', $key)) {
             return;
         }
 
@@ -140,5 +144,34 @@ final class VoucherOperationalSummaryData extends Data
             'key' => $key,
             'label' => $label,
         ];
+    }
+
+    private static function inputBadgeKey(VoucherInputField $field): string
+    {
+        return match ($field) {
+            VoucherInputField::OTP => 'otp',
+            VoucherInputField::SELFIE => 'selfie',
+            VoucherInputField::SIGNATURE => 'signature',
+            VoucherInputField::LOCATION => 'location',
+            default => 'input_'.$field->value,
+        };
+    }
+
+    private static function inputBadgeLabel(VoucherInputField $field): string
+    {
+        return match ($field) {
+            VoucherInputField::EMAIL => 'Email',
+            VoucherInputField::MOBILE => 'Mobile',
+            VoucherInputField::REFERENCE_CODE => 'Reference',
+            VoucherInputField::SIGNATURE => 'Signature',
+            VoucherInputField::KYC => 'KYC',
+            VoucherInputField::NAME => 'Name',
+            VoucherInputField::ADDRESS => 'Address',
+            VoucherInputField::BIRTH_DATE => 'Birth Date',
+            VoucherInputField::GROSS_MONTHLY_INCOME => 'Income',
+            VoucherInputField::LOCATION => 'Location',
+            VoucherInputField::OTP => 'OTP',
+            VoucherInputField::SELFIE => 'Selfie',
+        };
     }
 }

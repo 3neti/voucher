@@ -30,7 +30,9 @@ it('hydrates and serializes format-aware Rider instructions with a structured St
             'position' => 'top',
             'scrim' => 28,
             'theme' => 'dark',
-            'version' => 2,
+            'version' => 3,
+            'design_id' => 'x-change-amber',
+            'design_version' => 1,
             'artwork_source' => 'url',
             'artwork_treatment' => 'artwork',
             'copy_source' => 'splash',
@@ -48,6 +50,8 @@ it('hydrates and serializes format-aware Rider instructions with a structured St
         ->and($rider->stamp->fit)->toBe(RiderStampFit::Contain)
         ->and($rider->stamp->position)->toBe(RiderStampPosition::Top)
         ->and($rider->stamp->theme)->toBe(RiderStampTheme::Dark)
+        ->and($rider->stamp->design_id)->toBe('x-change-amber')
+        ->and($rider->stamp->design_version)->toBe(1)
         ->and($rider->stamp->artwork_source)->toBe(RiderStampArtworkSource::Url)
         ->and($rider->stamp->artwork_treatment)->toBe(RiderStampArtworkTreatment::Artwork)
         ->and($rider->stamp->copy_source)->toBe(RiderStampCopySource::Splash)
@@ -59,7 +63,9 @@ it('hydrates and serializes format-aware Rider instructions with a structured St
             'position' => 'top',
             'scrim' => 28,
             'theme' => 'dark',
-            'version' => 2,
+            'version' => 3,
+            'design_id' => 'x-change-amber',
+            'design_version' => 1,
             'artwork_source' => 'url',
             'artwork_treatment' => 'artwork',
             'copy_source' => 'splash',
@@ -84,6 +90,18 @@ it('hydrates legacy Rider Stamp v1 instructions without requiring composition fi
         ->and($stamp->artwork_treatment)->toBeNull()
         ->and($stamp->copy_source)->toBeNull()
         ->and($stamp->claim_marker)->toBeNull();
+});
+
+it('continues to hydrate Rider Stamp v2 composition records', function () {
+    $stamp = RiderStampData::from([
+        'source' => 'automatic',
+        'version' => 2,
+        'artwork_source' => 'x_change',
+    ]);
+
+    expect($stamp->version)->toBe(RiderStampData::COMPOSITION_SCHEMA_VERSION)
+        ->and($stamp->design_id)->toBeNull()
+        ->and($stamp->design_version)->toBeNull();
 });
 
 it('keeps legacy Rider instructions clean and backward compatible', function () {
@@ -135,7 +153,9 @@ it('validates Rider Stamp policy fields before hydration', function (array $stam
     'invalid fit' => [['fit' => 'stretch']],
     'invalid position' => [['position' => 'everywhere']],
     'invalid scrim' => [['scrim' => 101]],
-    'unsupported version' => [['version' => 3]],
+    'unsupported version' => [['version' => 4]],
+    'invalid design id' => [['design_id' => '<script>']],
+    'invalid design version' => [['design_version' => 0]],
     'invalid artwork source' => [['artwork_source' => 'remote_page']],
     'invalid artwork treatment' => [['artwork_treatment' => 'iframe']],
     'invalid copy source' => [['copy_source' => 'provider_payload']],

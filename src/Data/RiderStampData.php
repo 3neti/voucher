@@ -18,7 +18,9 @@ class RiderStampData extends Data
 {
     public const LEGACY_SCHEMA_VERSION = 1;
 
-    public const SCHEMA_VERSION = 2;
+    public const COMPOSITION_SCHEMA_VERSION = 2;
+
+    public const SCHEMA_VERSION = 3;
 
     public function __construct(
         public RiderStampSource $source = RiderStampSource::Automatic,
@@ -28,7 +30,9 @@ class RiderStampData extends Data
         public RiderStampPosition $position = RiderStampPosition::Center,
         public ?int $scrim = null,
         public RiderStampTheme $theme = RiderStampTheme::Automatic,
-        public int $version = self::SCHEMA_VERSION,
+        public int $version = self::COMPOSITION_SCHEMA_VERSION,
+        public ?string $design_id = null,
+        public ?int $design_version = null,
         public ?RiderStampArtworkSource $artwork_source = null,
         public ?RiderStampArtworkTreatment $artwork_treatment = null,
         public ?RiderStampCopySource $copy_source = null,
@@ -41,8 +45,20 @@ class RiderStampData extends Data
             throw new InvalidArgumentException('The Rider Stamp scrim must be between 0 and 100.');
         }
 
-        if (! in_array($this->version, [self::LEGACY_SCHEMA_VERSION, self::SCHEMA_VERSION], true)) {
+        if (! in_array($this->version, [self::LEGACY_SCHEMA_VERSION, self::COMPOSITION_SCHEMA_VERSION, self::SCHEMA_VERSION], true)) {
             throw new InvalidArgumentException("Unsupported Rider Stamp version [{$this->version}].");
+        }
+
+        if ($this->version === self::SCHEMA_VERSION && ($this->design_id === null || $this->design_version === null)) {
+            throw new InvalidArgumentException('Rider Stamp v3 requires a design identity and version.');
+        }
+
+        if ($this->design_id !== null && ! preg_match('/^[a-z][a-z0-9-]{0,79}$/', $this->design_id)) {
+            throw new InvalidArgumentException('The Rider Stamp design identifier is invalid.');
+        }
+
+        if ($this->design_version !== null && $this->design_version < 1) {
+            throw new InvalidArgumentException('The Rider Stamp design version must be at least 1.');
         }
     }
 }

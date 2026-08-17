@@ -110,8 +110,11 @@ class VoucherInstructionsData extends Data
             'rider.stamp.theme' => 'nullable|string|in:'.implode(',', array_column(RiderStampTheme::cases(), 'value')),
             'rider.stamp.version' => 'nullable|integer|in:'.implode(',', [
                 RiderStampData::LEGACY_SCHEMA_VERSION,
+                RiderStampData::COMPOSITION_SCHEMA_VERSION,
                 RiderStampData::SCHEMA_VERSION,
             ]),
+            'rider.stamp.design_id' => 'required_if:rider.stamp.version,'.RiderStampData::SCHEMA_VERSION.'|nullable|string|regex:/^[a-z][a-z0-9-]{0,79}$/',
+            'rider.stamp.design_version' => 'required_if:rider.stamp.version,'.RiderStampData::SCHEMA_VERSION.'|nullable|integer|min:1',
             'rider.stamp.artwork_source' => 'nullable|string|in:'.implode(',', array_column(RiderStampArtworkSource::cases(), 'value')),
             'rider.stamp.artwork_treatment' => 'nullable|string|in:'.implode(',', array_column(RiderStampArtworkTreatment::cases(), 'value')),
             'rider.stamp.copy_source' => 'nullable|string|in:'.implode(',', array_column(RiderStampCopySource::cases(), 'value')),

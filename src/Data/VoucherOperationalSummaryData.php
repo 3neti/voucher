@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace LBHurtado\Voucher\Data;
 
 use LBHurtado\Voucher\Enums\VoucherInputField;
+use LBHurtado\Voucher\Enums\VoucherSlicePlanMode;
 use LBHurtado\Voucher\Enums\VoucherType;
 use Spatie\LaravelData\Data;
 
@@ -59,7 +60,15 @@ final class VoucherOperationalSummaryData extends Data
             );
         }
 
-        if ($instructions->cash->slice_mode !== null) {
+        if ($instructions->slice_plan !== null) {
+            $sliceLabel = match ($instructions->slice_plan->mode) {
+                VoucherSlicePlanMode::Equal => "Divisible · {$instructions->slice_plan->slices->count()} slices",
+                VoucherSlicePlanMode::Flexible => 'Divisible · Flexible',
+                VoucherSlicePlanMode::Scheduled => "Divisible · {$instructions->slice_plan->slices->count()} labeled slices",
+            };
+
+            self::appendBadge($badges, true, 'divisible', $sliceLabel);
+        } elseif ($instructions->cash->slice_mode !== null) {
             $sliceLabel = match (true) {
                 $instructions->cash->slice_mode === 'fixed' && $instructions->cash->slices !== null => "Divisible · {$instructions->cash->slices} slices",
                 $instructions->cash->slice_mode === 'open' => 'Divisible · Open',

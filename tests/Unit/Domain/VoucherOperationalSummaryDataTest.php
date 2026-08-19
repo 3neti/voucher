@@ -119,6 +119,68 @@ it('summarizes execution-relevant instructions in deterministic badge order', fu
     ]);
 });
 
+it('summarizes canonical slice plans without retired cash slice fields', function (
+    array $slicePlan,
+    string $expectedLabel,
+) {
+    $instructions = validVoucherInstructions(overrides: [
+        'slice_plan' => $slicePlan,
+    ]);
+
+    $summary = VoucherOperationalSummaryData::fromInstructions($instructions);
+
+    expect($summary->instruction_badges)->toContain([
+        'key' => 'divisible',
+        'label' => $expectedLabel,
+    ]);
+})->with([
+    'equal' => [
+        [
+            'schema' => 'voucher.slice-plan.v1',
+            'mode' => 'equal',
+            'selection' => 'next_only',
+            'total_minor' => 10_000,
+            'currency' => 'PHP',
+            'slices' => [
+                ['id' => 'slice_1', 'label' => 'Slice 1', 'amount_minor' => 5_000, 'sequence' => 1, 'claim_on' => null, 'claim_by' => null],
+                ['id' => 'slice_2', 'label' => 'Slice 2', 'amount_minor' => 5_000, 'sequence' => 2, 'claim_on' => null, 'claim_by' => null],
+            ],
+            'max_slices' => null,
+            'min_amount_minor' => null,
+        ],
+        'Divisible · 2 slices',
+    ],
+    'flexible' => [
+        [
+            'schema' => 'voucher.slice-plan.v1',
+            'mode' => 'flexible',
+            'selection' => 'flexible_amount',
+            'total_minor' => 10_000,
+            'currency' => 'PHP',
+            'slices' => [],
+            'max_slices' => 4,
+            'min_amount_minor' => 500,
+        ],
+        'Divisible · Flexible',
+    ],
+    'scheduled' => [
+        [
+            'schema' => 'voucher.slice-plan.v1',
+            'mode' => 'scheduled',
+            'selection' => 'one_or_many',
+            'total_minor' => 10_000,
+            'currency' => 'PHP',
+            'slices' => [
+                ['id' => 'fare_a', 'label' => 'Morning fare', 'amount_minor' => 5_000, 'sequence' => 1, 'claim_on' => null, 'claim_by' => null],
+                ['id' => 'fare_b', 'label' => 'Evening fare', 'amount_minor' => 5_000, 'sequence' => 2, 'claim_on' => null, 'claim_by' => null],
+            ],
+            'max_slices' => null,
+            'min_amount_minor' => null,
+        ],
+        'Divisible · 2 labeled slices',
+    ],
+]);
+
 it('explodes input fields into safe badges and deduplicates structured validations', function () {
     $instructions = validVoucherInstructions(overrides: [
         'inputs' => [

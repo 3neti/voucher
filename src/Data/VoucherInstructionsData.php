@@ -5,6 +5,7 @@ namespace LBHurtado\Voucher\Data;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Number;
+use InvalidArgumentException;
 use LBHurtado\Voucher\Data\Casts\CarbonIntervalCast;
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
 use LBHurtado\Voucher\Data\Transformers\TtlToStringTransformer;
@@ -57,8 +58,10 @@ class VoucherInstructionsData extends Data
         public bool $onboarding = false,
         public ?ExecutionInstructionData $execution = null,
         public ?ClaimInstructionData $claim = null,
+        public ?VoucherSlicePlanData $slice_plan = null,
     ) {
         $this->applyRulesAndDefaults();
+        $this->assertSlicePlanMatchesCash();
         //        $this->ttl = $ttl ?: CarbonInterval::hours(config('instructions.ttl'));
     }
 
@@ -193,6 +196,22 @@ class VoucherInstructionsData extends Data
                 'required_if:claim.claimant.mode,recipient',
             ],
             'claim.profile' => ['nullable', 'string', 'in:'.ClaimInstructionData::SCHEMA],
+
+            'slice_plan' => ['nullable', 'array'],
+            'slice_plan.schema' => ['required_with:slice_plan', 'string', 'in:'.VoucherSlicePlanData::SCHEMA],
+            'slice_plan.mode' => ['required_with:slice_plan', 'string', 'in:equal,flexible,scheduled'],
+            'slice_plan.selection' => ['required_with:slice_plan', 'string', 'in:next_only,one,one_or_many,flexible_amount'],
+            'slice_plan.total_minor' => ['required_with:slice_plan', 'integer', 'min:1'],
+            'slice_plan.currency' => ['required_with:slice_plan', 'string', 'size:3', 'uppercase'],
+            'slice_plan.slices' => ['nullable', 'array'],
+            'slice_plan.slices.*.id' => ['required', 'string', 'regex:/^[a-z][a-z0-9_-]{0,79}$/'],
+            'slice_plan.slices.*.label' => ['required', 'string', 'min:1', 'max:120'],
+            'slice_plan.slices.*.amount_minor' => ['required', 'integer', 'min:1'],
+            'slice_plan.slices.*.sequence' => ['required', 'integer', 'min:1'],
+            'slice_plan.slices.*.claim_on' => ['nullable', 'date'],
+            'slice_plan.slices.*.claim_by' => ['nullable', 'date', 'after_or_equal:slice_plan.slices.*.claim_on'],
+            'slice_plan.max_slices' => ['nullable', 'integer', 'min:1'],
+            'slice_plan.min_amount_minor' => ['nullable', 'integer', 'min:1'],
 
             'metadata' => ['nullable', 'array'],
             'metadata.flow_type' => ['nullable', 'string'],
@@ -348,6 +367,7 @@ class VoucherInstructionsData extends Data
                 'claimant' => $validated['claim']['claimant'] ?? null,
                 'profile' => $validated['claim']['profile'] ?? ClaimInstructionData::SCHEMA,
             ] : null,
+            'slice_plan' => $validated['slice_plan'] ?? null,
         ];
 
         return VoucherInstructionsData::from($data_array);
@@ -409,6 +429,7 @@ class VoucherInstructionsData extends Data
             'starts_at' => null,
             'expires_at' => null,
             'onboarding' => false,
+            'slice_plan' => null,
         ];
 
         return VoucherInstructionsData::from($data_array);
@@ -417,6 +438,34 @@ class VoucherInstructionsData extends Data
     public function executionInstruction(): ExecutionInstructionData
     {
         return $this->execution ?? ExecutionInstructionData::from([]);
+    }
+
+    private function assertSlicePlanMatchesCash(): void
+    {
+        if ($this->slice_plan === null) {
+            return;
+        }
+
+        if ($this->cash->slice_mode !== null
+            || $this->cash->slices !== null
+            || $this->cash->max_slices !== null
+            || $this->cash->min_withdrawal !== null) {
+            throw new InvalidArgumentException(
+                'Canonical voucher slice plans cannot be combined with retired cash slice fields.',
+            );
+        }
+
+        if ($this->cash->getAmount()->getMinorAmount()->toInt() !== $this->slice_plan->total_minor) {
+            throw new InvalidArgumentException(
+                'Voucher slice plan total must exactly equal the cash instruction amount.',
+            );
+        }
+
+        if (strtoupper($this->cash->currency) !== $this->slice_plan->currency) {
+            throw new InvalidArgumentException(
+                'Voucher slice plan currency must match the cash instruction currency.',
+            );
+        }
     }
 
     protected function rulesAndDefaults(): array

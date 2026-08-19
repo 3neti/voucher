@@ -90,6 +90,44 @@ it('allows slice spending after activation', function () {
         ]);
 });
 
+it('preserves a caller supplied execution identity for wallet replay protection', function () {
+    $gateway = new FakeStoredValueGateway(balance: 10000);
+
+    $context = storedValueContext(meta: [
+        'operation' => 'spend',
+        'amount' => 2500,
+        'merchant_reference' => 'MERCHANT-1',
+    ]);
+    $context->correlation = ['execution_id' => 'fare-tap-2026-08-19-0001'];
+
+    $result = (new StoredValueExecutionDriver($gateway))->execute($context);
+
+    expect($result->successful)->toBeTrue()
+        ->and($result->execution_id)->toBe('fare-tap-2026-08-19-0001')
+        ->and($gateway->spends)->toBe([
+            [
+                'amount' => 2500,
+                'merchant_reference' => 'MERCHANT-1',
+                'execution_id' => 'fare-tap-2026-08-19-0001',
+            ],
+        ]);
+});
+
+it('rejects an oversized stored value execution identity', function () {
+    $context = storedValueContext(meta: [
+        'operation' => 'spend',
+        'amount' => 2500,
+    ]);
+    $context->correlation = ['execution_id' => str_repeat('x', 161)];
+
+    expect(fn () => (new StoredValueExecutionDriver(
+        new FakeStoredValueGateway(balance: 10000),
+    ))->execute($context))->toThrow(
+        StoredValueSpendRejectedException::class,
+        'Stored value execution identity may not exceed 160 characters.',
+    );
+});
+
 it('rejects spending above remaining balance', function () {
     $gateway = new FakeStoredValueGateway(balance: 1000);
 

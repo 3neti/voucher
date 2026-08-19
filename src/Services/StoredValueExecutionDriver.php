@@ -23,7 +23,7 @@ class StoredValueExecutionDriver implements ExecutionDriverContract
 
     public function execute(ExecutionContextData $context): ExecutionResultData
     {
-        $executionId = (string) Str::uuid();
+        $executionId = $this->executionId($context);
 
         return match ($this->operation($context)) {
             'spend' => $this->spend($context, $executionId),
@@ -199,6 +199,23 @@ class StoredValueExecutionDriver implements ExecutionDriverContract
     private function operation(ExecutionContextData $context): string
     {
         return (string) ($context->meta['operation'] ?? 'activate');
+    }
+
+    private function executionId(ExecutionContextData $context): string
+    {
+        $executionId = trim((string) ($context->correlation['execution_id'] ?? ''));
+
+        if ($executionId === '') {
+            return (string) Str::uuid();
+        }
+
+        if (mb_strlen($executionId) > 160) {
+            throw new StoredValueSpendRejectedException(
+                'Stored value execution identity may not exceed 160 characters.',
+            );
+        }
+
+        return $executionId;
     }
 
     private function amount(ExecutionContextData $context): int

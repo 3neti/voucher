@@ -12,6 +12,9 @@ it('summarizes voucher capabilities without exposing instruction values', functi
     $instructions = validVoucherInstructions(overrides: [
         'voucher_type' => $voucherType->value,
         'target_amount' => $voucherType === VoucherType::REDEEMABLE ? null : 100,
+        'metadata' => $voucherType === VoucherType::REDEEMABLE ? [] : [
+            'collection_wallet_id' => 'wallet-test-1',
+        ],
         'cash' => [
             'validation' => [
                 'mobile' => '09171234567',

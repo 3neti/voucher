@@ -309,8 +309,12 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
         return 'active';
     }
 
-    // Computed Amount Methods (derived from wallet ledger)
-
+    /**
+     * Computed Amount Methods (derived from wallet ledger).
+     *
+     * @deprecated For payable/settlement vouchers orchestrated by x-change, use
+     *             LBHurtado\XChange\Services\VoucherCollectionProgressService.
+     */
     public function getPaidTotal(): float
     {
         if (! $this->cash || ! $this->cash->wallet) {
@@ -336,6 +340,10 @@ class Voucher extends BaseVoucher implements HasMedia, InputInterface
             ->sum('amount')) / 100; // Convert minor units to major (withdrawals are negative)
     }
 
+    /**
+     * @deprecated For payable/settlement vouchers orchestrated by x-change, use
+     *             LBHurtado\XChange\Services\VoucherCollectionProgressService.
+     */
     public function getRemaining(): float
     {
         if (! $this->target_amount) {

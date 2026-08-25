@@ -156,6 +156,7 @@ class VoucherInstructionsData extends Data
             // Settlement voucher fields
             'voucher_type' => 'nullable|string|in:redeemable,payable,settlement',
             'target_amount' => 'nullable|numeric|min:0|required_if:voucher_type,payable,settlement',
+            'metadata.collection_wallet_id' => 'nullable|required_if:voucher_type,payable,settlement',
             'rules' => 'nullable|array',
             'rules.min_payment' => 'nullable|numeric|min:0',
             'rules.max_payment' => 'nullable|numeric|min:0',
@@ -216,7 +217,6 @@ class VoucherInstructionsData extends Data
             'metadata' => ['nullable', 'array'],
             'metadata.flow_type' => ['nullable', 'string'],
             'metadata.issuer_id' => ['nullable', 'string'],
-            'metadata.collection_wallet_id' => ['nullable'],
 
             // Validation instructions
             'validation' => 'nullable|array',

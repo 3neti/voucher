@@ -131,6 +131,32 @@ it('preserves collection wallet metadata through createFromAttribs and toCleanAr
         ->and(data_get($instructions->toCleanArray(), 'metadata.collection_wallet_id'))->toBe(123);
 });
 
+it('requires a collection wallet when creating payable voucher instructions', function () {
+    VoucherInstructionsData::createFromAttribs([
+        'cash' => [
+            'amount' => 0,
+            'currency' => 'PHP',
+            'validation' => [
+                'country' => 'PH',
+            ],
+        ],
+        'inputs' => [
+            'fields' => [],
+        ],
+        'feedback' => [],
+        'rider' => [],
+        'count' => 1,
+        'prefix' => 'PAY',
+        'mask' => '****',
+        'voucher_type' => 'payable',
+        'target_amount' => 100,
+        'metadata' => [
+            'flow_type' => 'collectible',
+            'issuer_id' => '1',
+        ],
+    ]);
+})->throws(ValidationException::class);
+
 it('preserves rider splash metadata through createFromAttribs and toCleanArray', function () {
     $instructions = VoucherInstructionsData::createFromAttribs([
         'cash' => [

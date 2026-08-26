@@ -9,7 +9,7 @@ use Spatie\LaravelData\Data;
 class ExecutionContextData extends Data
 {
     public function __construct(
-        public Contact $contact,
+        public ?Contact $contact,
         public string $voucherCode,
         public array $meta = [],
         public ?Voucher $voucher = null,

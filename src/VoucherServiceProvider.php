@@ -9,6 +9,7 @@ use LBHurtado\Voucher\Actions\GenerateVouchers;
 use LBHurtado\Voucher\Actions\RedeemVoucher;
 use LBHurtado\Voucher\Contracts\ExecutionDriverContract;
 use LBHurtado\Voucher\Contracts\GeneratesVouchers;
+use LBHurtado\Voucher\Contracts\PayableCollectionExecutionGateway;
 use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Contracts\SettlementEnvelopeExecutionGateway;
 use LBHurtado\Voucher\Contracts\StoredValueExecutionGateway;
@@ -17,8 +18,10 @@ use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionPipelineRuntime;
 use LBHurtado\Voucher\Services\ExecutionPipelineStepRegistry;
+use LBHurtado\Voucher\Services\NullPayableCollectionExecutionGateway;
 use LBHurtado\Voucher\Services\NullSettlementEnvelopeExecutionGateway;
 use LBHurtado\Voucher\Services\NullStoredValueExecutionGateway;
+use LBHurtado\Voucher\Services\PayableCollectionExecutionDriver;
 use LBHurtado\Voucher\Services\RedemptionContractEngine;
 use LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver;
 use LBHurtado\Voucher\Services\StoredValueExecutionDriver;
@@ -60,13 +63,15 @@ class VoucherServiceProvider extends ServiceProvider
         $this->app->bind(ExecutionDriverContract::class, DefaultExecutionDriver::class);
         $this->app->bind(SettlementEnvelopeExecutionGateway::class, NullSettlementEnvelopeExecutionGateway::class);
         $this->app->bind(StoredValueExecutionGateway::class, NullStoredValueExecutionGateway::class);
+        $this->app->bind(PayableCollectionExecutionGateway::class, NullPayableCollectionExecutionGateway::class);
         $this->app->singleton(ExecutionPipelineStepRegistry::class, fn ($app) => new ExecutionPipelineStepRegistry($app));
         $this->app->singleton(ExecutionPipelineRuntime::class);
         $this->app->singleton(ExecutionDriverRegistry::class, function ($app) {
             return (new ExecutionDriverRegistry($app))
                 ->register('default', DefaultExecutionDriver::class)
                 ->register('settlement_envelope', SettlementEnvelopeExecutionDriver::class)
-                ->register('stored_value', StoredValueExecutionDriver::class);
+                ->register('stored_value', StoredValueExecutionDriver::class)
+                ->register('payable_collection', PayableCollectionExecutionDriver::class);
         });
 
         $this->app->singleton(RedemptionEvidenceExtractor::class);

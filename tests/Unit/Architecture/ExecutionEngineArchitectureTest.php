@@ -30,7 +30,12 @@ it('keeps driver-composed pipelines out of the central execution engine', functi
 });
 
 it('keeps the built-in execution driver list explicit', function () {
-    expect(app(ExecutionDriverRegistry::class)->keys())->toBe(['default', 'settlement_envelope', 'stored_value']);
+    expect(app(ExecutionDriverRegistry::class)->keys())->toBe([
+        'default',
+        'settlement_envelope',
+        'stored_value',
+        'payable_collection',
+    ]);
 });
 
 it('keeps stored-value execution behind the driver gateway seam', function () {
@@ -38,4 +43,11 @@ it('keeps stored-value execution behind the driver gateway seam', function () {
         ->and(interface_exists('LBHurtado\\Voucher\\Contracts\\StoredValueExecutionGateway'))->toBeTrue()
         ->and(class_exists('LBHurtado\\Voucher\\Services\\StoredValueVoucher'))->toBeFalse()
         ->and(class_exists('LBHurtado\\Voucher\\Models\\StoredValueVoucher'))->toBeFalse();
+});
+
+it('keeps payable collection execution behind the driver gateway seam', function () {
+    expect(class_exists('LBHurtado\\Voucher\\Services\\PayableCollectionExecutionDriver'))->toBeTrue()
+        ->and(interface_exists('LBHurtado\\Voucher\\Contracts\\PayableCollectionExecutionGateway'))->toBeTrue()
+        ->and(class_exists('LBHurtado\\Voucher\\Actions\\CollectVoucherFunds'))->toBeFalse()
+        ->and(class_exists('LBHurtado\\Voucher\\Models\\VoucherCollection'))->toBeFalse();
 });

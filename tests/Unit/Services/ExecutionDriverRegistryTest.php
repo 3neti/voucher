@@ -9,6 +9,7 @@ use LBHurtado\Voucher\Exceptions\UnknownExecutionDriverException;
 use LBHurtado\Voucher\Services\DefaultExecutionDriver;
 use LBHurtado\Voucher\Services\ExecutionDriverRegistry;
 use LBHurtado\Voucher\Services\ExecutionEngine;
+use LBHurtado\Voucher\Services\PayableCollectionExecutionDriver;
 use LBHurtado\Voucher\Services\SettlementEnvelopeExecutionDriver;
 use LBHurtado\Voucher\Services\StoredValueExecutionDriver;
 
@@ -43,7 +44,7 @@ it('resolves the default driver by key from the package singleton registry', fun
 
     expect($registry)->toBe(app(ExecutionDriverRegistry::class))
         ->and($registry->has('default'))->toBeTrue()
-        ->and($registry->keys())->toBe(['default', 'settlement_envelope', 'stored_value'])
+        ->and($registry->keys())->toBe(['default', 'settlement_envelope', 'stored_value', 'payable_collection'])
         ->and($registry->resolve('default'))->toBeInstanceOf(DefaultExecutionDriver::class);
 });
 
@@ -59,6 +60,13 @@ it('resolves the stored value driver by key from the package singleton registry'
 
     expect($registry->has('stored_value'))->toBeTrue()
         ->and($registry->resolve('stored_value'))->toBeInstanceOf(StoredValueExecutionDriver::class);
+});
+
+it('resolves the payable collection driver by key from the package singleton registry', function () {
+    $registry = app(ExecutionDriverRegistry::class);
+
+    expect($registry->has('payable_collection'))->toBeTrue()
+        ->and($registry->resolve('payable_collection'))->toBeInstanceOf(PayableCollectionExecutionDriver::class);
 });
 
 it('throws a clear exception for unknown execution drivers', function () {

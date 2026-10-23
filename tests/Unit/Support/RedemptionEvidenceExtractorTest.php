@@ -612,3 +612,19 @@ it('prefers top-level inputs over redemption.inputs when both exist', function (
         ->and($evidence->otp_verified_at)->not->toBeNull()
         ->and($evidence->otp_verified_at?->toIso8601String())->toStartWith('2026-04-19T11:45:00');
 });
+
+it('extracts pre-execution form-flow proof and coordinate aliases without a redeemer record', function () {
+    $evidence = app(RedemptionEvidenceExtractor::class)->fromInputs([
+        'otp' => [
+            'verified' => true,
+            'verified_at' => '2026-10-23T10:00:00+08:00',
+            'verification_reference' => 'verification-123',
+        ],
+        'location' => ['latitude' => 14.5995, 'longitude' => 120.9842],
+    ]);
+
+    expect($evidence->otp)->toBe('verification-123')
+        ->and($evidence->otp_verified)->toBeTrue()
+        ->and($evidence->latitude)->toBe(14.5995)
+        ->and($evidence->longitude)->toBe(120.9842);
+});

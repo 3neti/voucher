@@ -71,8 +71,7 @@ class FaceMatchRuleValidator implements RedemptionRuleValidator
 
         if (
             $minConfidence !== null
-            && $evidence->match_confidence !== null
-            && $evidence->match_confidence < $minConfidence
+            && ($evidence->match_confidence === null || $evidence->match_confidence < $minConfidence)
         ) {
             return [
                 new RedemptionValidationIssueData(

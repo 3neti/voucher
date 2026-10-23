@@ -15,7 +15,18 @@ class RedemptionEvidenceExtractor
     {
         $redeemerRecord = $voucher->redeemers()->latest('id')->first();
 
-        $metadata = $this->normalize($redeemerRecord?->metadata);
+        return $this->fromMetadata($redeemerRecord?->metadata);
+    }
+
+    /** @param array<string, mixed> $inputs */
+    public function fromInputs(array $inputs): RedemptionEvidenceData
+    {
+        return $this->fromMetadata(['inputs' => $inputs]);
+    }
+
+    private function fromMetadata(mixed $value): RedemptionEvidenceData
+    {
+        $metadata = $this->normalize($value);
         $redemption = Arr::get($metadata, 'redemption', []);
         //        $inputs = Arr::get($metadata, 'inputs', []);
         $inputs = $this->normalize(Arr::get($metadata, 'inputs', []));
@@ -30,6 +41,7 @@ class RedemptionEvidenceExtractor
 
             Arr::get($inputs, 'otp.value'),
             Arr::get($inputs, 'otp.otp_code'),
+            Arr::get($inputs, 'otp.verification_reference'),
             is_scalar(Arr::get($inputs, 'otp')) ? Arr::get($inputs, 'otp') : null,
             Arr::get($inputs, 'otp_code'),
         );
@@ -70,6 +82,7 @@ class RedemptionEvidenceExtractor
                 $this->firstPresent(
                     Arr::get($redemption, 'location.lat'),
                     Arr::get($inputs, 'location.lat'),
+                    Arr::get($inputs, 'location.latitude'),
                     Arr::get($inputs, 'latitude'),
                 )
             ),
@@ -78,6 +91,7 @@ class RedemptionEvidenceExtractor
                 $this->firstPresent(
                     Arr::get($redemption, 'location.lng'),
                     Arr::get($inputs, 'location.lng'),
+                    Arr::get($inputs, 'location.longitude'),
                     Arr::get($inputs, 'longitude'),
                 )
             ),

@@ -3,6 +3,7 @@
 namespace LBHurtado\Voucher\Services;
 
 use LBHurtado\Voucher\Contracts\RedemptionRuleValidator;
+use LBHurtado\Voucher\Data\RedemptionEvidenceData;
 use LBHurtado\Voucher\Data\RedemptionValidationResultData;
 use LBHurtado\Voucher\Models\Voucher;
 use LBHurtado\Voucher\Support\RedemptionEvidenceExtractor;
@@ -19,8 +20,17 @@ class RedemptionContractEngine
 
     public function validate(Voucher $voucher): RedemptionValidationResultData
     {
-        $evidence = $this->extractor->extract($voucher);
+        return $this->validateEvidence($voucher, $this->extractor->extract($voucher));
+    }
 
+    /** @param array<string, mixed> $inputs */
+    public function validateInputs(Voucher $voucher, array $inputs): RedemptionValidationResultData
+    {
+        return $this->validateEvidence($voucher, $this->extractor->fromInputs($inputs));
+    }
+
+    public function validateEvidence(Voucher $voucher, RedemptionEvidenceData $evidence): RedemptionValidationResultData
+    {
         $issues = [];
 
         foreach ($this->validators as $validator) {

@@ -165,3 +165,24 @@ it('returns a warn issue when face match failure mode is warn', function () {
         ->and($issues[0]->code)->toBe(RedemptionValidationCode::FACE_MATCH_NOT_VERIFIED)
         ->and($issues[0]->severity)->toBe(RedemptionValidationSeverity::WARN);
 });
+
+it('rejects missing confidence when a face match threshold is configured', function () {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: [
+        'validation' => [
+            'face_match' => [
+                'required' => true,
+                'on_failure' => 'block',
+                'min_confidence' => 0.90,
+            ],
+        ],
+    ]));
+
+    $issues = app(FaceMatchRuleValidator::class)->validate($voucher, new RedemptionEvidenceData(
+        face_verification_verified: true,
+        face_match: true,
+    ));
+
+    expect($issues)->toHaveCount(1)
+        ->and($issues[0]->code)->toBe(RedemptionValidationCode::FACE_MATCH_CONFIDENCE_TOO_LOW)
+        ->and($issues[0]->severity)->toBe(RedemptionValidationSeverity::BLOCK);
+});

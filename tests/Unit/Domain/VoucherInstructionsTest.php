@@ -11,6 +11,23 @@ beforeEach(function () {
     $this->setupSystemUser();
 });
 
+it('round trips the fee bearer without embedding a fee amount', function (string $bearer) {
+    $instructions = validVoucherInstructions(overrides: ['fee_bearer' => $bearer]);
+
+    expect($instructions->fee_bearer)->toBe($bearer)
+        ->and(VoucherInstructionsData::from($instructions->toArray())->fee_bearer)->toBe($bearer)
+        ->and($instructions->toArray())->not->toHaveKey('fees');
+})->with(['issuer', 'payer']);
+
+it('preserves legacy instructions without a fee bearer', function () {
+    expect(validVoucherInstructions()->fee_bearer)->toBeNull();
+});
+
+it('rejects unsupported fee bearers', function () {
+    expect(fn () => validVoucherInstructions(overrides: ['fee_bearer' => 'beneficiary']))
+        ->toThrow(ValidationException::class);
+});
+
 it('persists instruction payloads in order', function () {
     $voucher = issueVoucher(validVoucherInstructions(
         amount: 150.00,
@@ -223,4 +240,14 @@ it('persists explicit execution instructions into voucher metadata', function ()
 
     expect(data_get($voucher->metadata, 'instructions.execution.driver'))->toBe('stored-value')
         ->and(data_get($voucher->metadata, 'instructions.execution.metadata.ledger'))->toBe('beneficiary_wallet');
+});
+
+it('preserves the explicit settlement repayment mode through instruction validation', function () {
+    $instructions = validVoucherInstructions(overrides: [
+        'voucher_type' => 'settlement', 'target_amount' => 120,
+        'metadata' => ['collection_wallet_id' => '1'],
+        'rules' => ['settlement_mode' => 'disburse_then_repay', 'min_payment' => 30, 'max_payment' => 30],
+    ]);
+    expect(VoucherInstructionsData::from($instructions->toArray())->rules)
+        ->toMatchArray(['settlement_mode' => 'disburse_then_repay', 'min_payment' => 30, 'max_payment' => 30]);
 });

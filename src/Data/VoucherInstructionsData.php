@@ -59,7 +59,11 @@ class VoucherInstructionsData extends Data
         public ?ExecutionInstructionData $execution = null,
         public ?ClaimInstructionData $claim = null,
         public ?VoucherSlicePlanData $slice_plan = null,
+        public ?string $fee_bearer = null,
     ) {
+        if ($this->fee_bearer !== null && ! in_array($this->fee_bearer, ['issuer', 'payer'], true)) {
+            throw new InvalidArgumentException('Fee bearer must be issuer or payer.');
+        }
         $this->applyRulesAndDefaults();
         $this->assertSlicePlanMatchesCash();
         //        $this->ttl = $ttl ?: CarbonInterval::hours(config('instructions.ttl'));
@@ -155,6 +159,7 @@ class VoucherInstructionsData extends Data
 
             // Settlement voucher fields
             'voucher_type' => 'nullable|string|in:redeemable,payable,settlement',
+            'fee_bearer' => 'nullable|string|in:issuer,payer',
             'target_amount' => 'nullable|numeric|min:0|required_if:voucher_type,payable,settlement',
             'metadata.collection_wallet_id' => 'nullable|required_if:voucher_type,payable,settlement',
             'rules' => 'nullable|array',
@@ -345,6 +350,7 @@ class VoucherInstructionsData extends Data
             'expires_at' => $validated['expires_at'] ?? null,
             'metadata' => $validated['metadata'] ?? null,
             'voucher_type' => $validated['voucher_type'] ?? null,
+            'fee_bearer' => $validated['fee_bearer'] ?? null,
             'target_amount' => $validated['target_amount'] ?? null,
             'rules' => $validated['rules'] ?? null,
             'onboarding' => $validated['onboarding']

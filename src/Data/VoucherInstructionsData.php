@@ -163,6 +163,7 @@ class VoucherInstructionsData extends Data
             'target_amount' => 'nullable|numeric|min:0|required_if:voucher_type,payable,settlement',
             'metadata.collection_wallet_id' => 'nullable|required_if:voucher_type,payable,settlement',
             'rules' => 'nullable|array',
+            'rules.settlement_mode' => 'nullable|string|in:disburse_then_repay',
             'rules.min_payment' => 'nullable|numeric|min:0',
             'rules.max_payment' => 'nullable|numeric|min:0',
             'rules.allow_overpayment' => 'nullable|boolean',

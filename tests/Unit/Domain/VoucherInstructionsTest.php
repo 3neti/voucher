@@ -241,3 +241,13 @@ it('persists explicit execution instructions into voucher metadata', function ()
     expect(data_get($voucher->metadata, 'instructions.execution.driver'))->toBe('stored-value')
         ->and(data_get($voucher->metadata, 'instructions.execution.metadata.ledger'))->toBe('beneficiary_wallet');
 });
+
+it('preserves the explicit settlement repayment mode through instruction validation', function () {
+    $instructions = validVoucherInstructions(overrides: [
+        'voucher_type' => 'settlement', 'target_amount' => 120,
+        'metadata' => ['collection_wallet_id' => '1'],
+        'rules' => ['settlement_mode' => 'disburse_then_repay', 'min_payment' => 30, 'max_payment' => 30],
+    ]);
+    expect(VoucherInstructionsData::from($instructions->toArray())->rules)
+        ->toMatchArray(['settlement_mode' => 'disburse_then_repay', 'min_payment' => 30, 'max_payment' => 30]);
+});

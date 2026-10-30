@@ -73,6 +73,27 @@ class VoucherInstructionsData extends Data
         //        $this->ttl = $ttl ?: CarbonInterval::hours(config('instructions.ttl'));
     }
 
+    public function presentationData(): ?VoucherPresentationData
+    {
+        return $this->execution?->schema === ExecutionInstructionData::SCHEMA_V2 && is_array($this->presentation)
+            ? VoucherPresentationData::from($this->presentation)
+            : null;
+    }
+
+    public function pricingData(): ?VoucherPricingDecisionData
+    {
+        return $this->execution?->schema === ExecutionInstructionData::SCHEMA_V2 && is_array($this->pricing)
+            ? VoucherPricingDecisionData::from($this->pricing)
+            : null;
+    }
+
+    public function campaignData(): ?VoucherCampaignData
+    {
+        return $this->execution?->schema === ExecutionInstructionData::SCHEMA_V2 && is_array($this->campaign)
+            ? VoucherCampaignData::from($this->campaign)
+            : null;
+    }
+
     public static function rules(): array
     {
         return [

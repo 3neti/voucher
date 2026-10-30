@@ -50,6 +50,16 @@ class FeedbackInstructionData extends Data
         ];
     }
 
+    /** @return list<VoucherWebhookSubscriptionData> */
+    public function webhookSubscriptions(): array
+    {
+        if (! is_array($this->webhooks)) {
+            return [];
+        }
+
+        return array_map(static fn (array $subscription): VoucherWebhookSubscriptionData => VoucherWebhookSubscriptionData::from($subscription), $this->webhooks);
+    }
+
     /**
      * Create an instance of FeedbackInstructionData from a comma-delimited input string.
      *

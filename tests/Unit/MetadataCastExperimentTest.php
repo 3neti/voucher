@@ -139,8 +139,12 @@ it('requires explicit validation to reject a malformed nested driver', function 
 });
 
 it('exercises the real x-change execution gateway with baseline and cast metadata', function () {
-    require_once '/Users/rli/PhpstormProjects/x-change-sandbox/vendor/3neti/x-change/src/Contracts/SettlementEnvelopeReadinessContract.php';
-    require_once '/Users/rli/PhpstormProjects/x-change-sandbox/vendor/3neti/x-change/src/Services/Execution/XChangeSettlementEnvelopeExecutionGateway.php';
+    $xchangePath = getenv('XCHANGE_EXPERIMENT_PATH');
+    if (! $xchangePath || ! is_file($xchangePath.'/src/Contracts/SettlementEnvelopeReadinessContract.php')) {
+        $this->markTestSkipped('Set XCHANGE_EXPERIMENT_PATH to run the optional x-change integration experiment.');
+    }
+    require_once $xchangePath.'/src/Contracts/SettlementEnvelopeReadinessContract.php';
+    require_once $xchangePath.'/src/Services/Execution/XChangeSettlementEnvelopeExecutionGateway.php';
     $readiness = Mockery::mock(SettlementEnvelopeReadinessContract::class);
     $gateway = new XChangeSettlementEnvelopeExecutionGateway($readiness);
     $metadata = ['settlement_envelope' => ['driver' => 'philhealth-bst', 'readiness_gate' => 'custom-gate', 'reference' => 'ENV-123']];
@@ -154,7 +158,11 @@ it('exercises the real x-change execution gateway with baseline and cast metadat
 });
 
 it('exercises the collection gate against the persisted instruction and evidence paths', function () {
-    require_once '/Users/rli/PhpstormProjects/x-change-sandbox/vendor/3neti/x-change/src/Services/SettlementCollectionGate.php';
+    $xchangePath = getenv('XCHANGE_EXPERIMENT_PATH');
+    if (! $xchangePath || ! is_file($xchangePath.'/src/Services/SettlementCollectionGate.php')) {
+        $this->markTestSkipped('Set XCHANGE_EXPERIMENT_PATH to run the optional x-change integration experiment.');
+    }
+    require_once $xchangePath.'/src/Services/SettlementCollectionGate.php';
     config()->set('x-change.settlement.default_driver', 'fallback-driver');
     config()->set('x-change.settlement.default_gate', 'settleable');
     $gate = (new ReflectionClass(SettlementCollectionGate::class))->newInstanceWithoutConstructor();

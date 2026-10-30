@@ -24,6 +24,39 @@ it('rejects unsupported future execution schema', function (): void {
     expect(fn () => ExecutionInstructionData::from(['schema' => 'voucher.execution.v3']))->toThrow(UnsupportedExecutionInstructionSchemaException::class);
 });
 
+it('preserves legacy validation when old execution data contains additional fields', function (): void {
+    $input = ['cash' => ['amount' => 0, 'currency' => 'PHP', 'validation' => ['country' => 'PH']],
+        'inputs' => ['fields' => []], 'feedback' => [], 'rider' => [], 'count' => 1, 'prefix' => 'PAY', 'mask' => '****',
+        'execution' => ['schema' => 'voucher.execution.v1', 'settlement' => ['legacy_custom' => true]]];
+
+    expect(VoucherInstructionsData::createFromAttribs($input)->execution->schema)->toBe('voucher.execution.v1');
+});
+
+it('validates the structure of v2 settlement, value flow and event declarations', function (string $path, mixed $value): void {
+    $input = [
+        'cash' => ['amount' => 0, 'currency' => 'PHP', 'validation' => ['country' => 'PH']],
+        'inputs' => ['fields' => []], 'feedback' => [], 'rider' => [], 'count' => 1, 'prefix' => 'PAY', 'mask' => '****',
+        'execution' => [
+            'schema' => 'voucher.execution.v2', 'driver' => 'settlement_envelope',
+            'settlement' => ['driver' => 'philhealth-bst', 'readiness_gate' => 'settleable'],
+            'value_flow' => ['destination' => 'instapay.gcash.mobile:09179999999'],
+            'events' => ['attest' => ['actor' => 'beneficiary', 'requires' => [], 'surface' => 'claim', 'authentication' => 'anonymous']],
+        ],
+    ];
+    data_set($input, $path, $value);
+
+    expect(fn () => VoucherInstructionsData::createFromAttribs($input))->toThrow(ValidationException::class);
+})->with([
+    ['execution.settlement.unrecognized', 'unsafe'],
+    ['execution.settlement.driver', ''],
+    ['execution.value_flow.destination', ''],
+    ['execution.value_flow.unrecognized', 'unsafe'],
+    ['execution.events.attest.actor', ''],
+    ['execution.events.attest.requires', 'not-a-list'],
+    ['execution.events.attest.authentication', 'bypass'],
+    ['execution.events.attest.unrecognized', 'unsafe'],
+]);
+
 it('round trips v2 voucher fields without adding them to v1 instructions', function (): void {
     $base = ['cash' => ['amount' => 0, 'currency' => 'PHP', 'validation' => ['country' => 'PH']], 'inputs' => ['fields' => []], 'feedback' => [], 'rider' => [], 'count' => 1, 'prefix' => 'PAY', 'mask' => '****'];
     $v1 = VoucherInstructionsData::createFromAttribs($base)->toArray();

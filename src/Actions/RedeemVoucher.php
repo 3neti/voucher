@@ -5,6 +5,7 @@ namespace LBHurtado\Voucher\Actions;
 use LBHurtado\Contact\Models\Contact;
 use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Data\ExecutionContextData;
+use LBHurtado\Voucher\Exceptions\UnsupportedExecutionInstructionSchemaException;
 use LBHurtado\Voucher\Models\Voucher;
 use LBHurtado\Voucher\Services\ExecutionEngine;
 use Lorisleiva\Actions\Concerns\AsAction;
@@ -46,7 +47,12 @@ class RedeemVoucher implements RedeemsVouchers
                     correlation: $this->correlationFrom($meta),
                 );
             }
-        } catch (Throwable) {
+        } catch (UnsupportedExecutionInstructionSchemaException $exception) {
+            throw $exception;
+        } catch (Throwable $exception) {
+            if (isset($voucher) && $voucher instanceof Voucher && data_get($voucher->metadata, 'instructions.execution.schema') === 'voucher.execution.v2') {
+                throw $exception;
+            }
             // Preserve the legacy public redemption path if persisted context cannot be hydrated.
         }
 

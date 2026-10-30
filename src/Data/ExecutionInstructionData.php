@@ -9,6 +9,8 @@ class ExecutionInstructionData extends Data
 {
     public const SCHEMA = 'voucher.execution.v1';
 
+    public const SCHEMA_V2 = 'voucher.execution.v2';
+
     public function __construct(
         public string $schema = self::SCHEMA,
         public string $driver = 'default',
@@ -17,8 +19,11 @@ class ExecutionInstructionData extends Data
         public ?string $fallback = null,
         public ?array $visibility = null,
         public ?array $metadata = null,
+        public ?array $settlement = null,
+        public ?array $value_flow = null,
+        public ?array $events = null,
     ) {
-        if ($this->schema !== self::SCHEMA) {
+        if (! in_array($this->schema, [self::SCHEMA, self::SCHEMA_V2], true)) {
             throw UnsupportedExecutionInstructionSchemaException::forSchema($this->schema);
         }
     }
@@ -35,6 +40,9 @@ class ExecutionInstructionData extends Data
             'visibility' => ['nullable', 'array'],
             'visibility.*' => ['string', 'min:1'],
             'metadata' => ['nullable', 'array'],
+            'settlement' => ['nullable', 'array'],
+            'value_flow' => ['nullable', 'array'],
+            'events' => ['nullable', 'array'],
         ];
     }
 }

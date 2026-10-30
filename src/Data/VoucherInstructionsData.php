@@ -27,6 +27,7 @@ use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Attributes\WithTransformer;
 use Spatie\LaravelData\Casts\DateTimeInterfaceCast;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Optional;
 use Spatie\LaravelData\Transformers\DateTimeInterfaceTransformer;
 
 class VoucherInstructionsData extends Data
@@ -60,6 +61,9 @@ class VoucherInstructionsData extends Data
         public ?ClaimInstructionData $claim = null,
         public ?VoucherSlicePlanData $slice_plan = null,
         public ?string $fee_bearer = null,
+        public array|Optional $presentation = new Optional,
+        public array|Optional $pricing = new Optional,
+        public array|Optional $campaign = new Optional,
     ) {
         if ($this->fee_bearer !== null && ! in_array($this->fee_bearer, ['issuer', 'payer'], true)) {
             throw new InvalidArgumentException('Fee bearer must be issuer or payer.');
@@ -95,6 +99,34 @@ class VoucherInstructionsData extends Data
             'feedback.mobile' => ['nullable', (new Phone)->country('PH')->type('mobile')],
             'feedback.email' => 'nullable|email',
             'feedback.webhook' => 'nullable|url',
+            'feedback.webhooks' => ['prohibited_unless:execution.schema,voucher.execution.v2', 'array'],
+            'feedback.webhooks.*' => ['required', 'array:url,events'],
+            'feedback.webhooks.*.url' => ['required', 'url'],
+            'feedback.webhooks.*.events' => ['required', 'array', 'min:1'],
+            'feedback.webhooks.*.events.*' => ['required', 'string', 'distinct'],
+            'presentation' => ['prohibited_unless:execution.schema,voucher.execution.v2', 'array:stamp,share'],
+            'presentation.stamp' => ['sometimes', 'array:design_id,design_version,show_logo,show_tagline,claim_marker'],
+            'presentation.stamp.design_id' => ['required_with:presentation.stamp', 'string'],
+            'presentation.stamp.design_version' => ['required_with:presentation.stamp', 'integer', 'min:1'],
+            'presentation.stamp.show_logo' => ['nullable', 'boolean'],
+            'presentation.stamp.show_tagline' => ['nullable', 'boolean'],
+            'presentation.stamp.claim_marker' => ['nullable', 'string'],
+            'presentation.share' => ['sometimes', 'array:title,description,image_source'],
+            'presentation.share.title' => ['nullable', 'string'],
+            'presentation.share.description' => ['nullable', 'string'],
+            'presentation.share.image_source' => ['nullable', 'string'],
+            'pricing' => ['prohibited_unless:execution.schema,voucher.execution.v2', 'array:quote_reference,currency,fee_bearer,quote_hash'],
+            'pricing.quote_reference' => ['required_with:pricing', 'string'],
+            'pricing.currency' => ['required_with:pricing', 'string', 'size:3'],
+            'pricing.fee_bearer' => ['required_with:pricing', 'in:issuer,payer'],
+            'pricing.quote_hash' => ['nullable', 'regex:/^[a-f0-9]{64}$/'],
+            'campaign' => ['prohibited_unless:execution.schema,voucher.execution.v2', 'array:campaign_reference,campaign_revision,template_id,template_version,definition_hash,payment_recognition_reference'],
+            'campaign.campaign_reference' => ['required_with:campaign', 'string'],
+            'campaign.campaign_revision' => ['required_with:campaign', 'string'],
+            'campaign.template_id' => ['required_with:campaign', 'string'],
+            'campaign.template_version' => ['required_with:campaign', 'string'],
+            'campaign.definition_hash' => ['required_with:campaign', 'regex:/^[a-f0-9]{64}$/'],
+            'campaign.payment_recognition_reference' => ['nullable', 'string'],
 
             'rider.message' => 'nullable|string|min:1',
             'rider.url' => 'nullable|url',
@@ -181,6 +213,9 @@ class VoucherInstructionsData extends Data
             'execution.visibility' => ['nullable', 'array'],
             'execution.visibility.*' => ['string', 'min:1'],
             'execution.metadata' => ['nullable', 'array'],
+            'execution.settlement' => ['nullable', 'array'],
+            'execution.value_flow' => ['nullable', 'array'],
+            'execution.events' => ['nullable', 'array'],
 
             'claim' => ['nullable', 'array'],
             'claim.outcomes' => ['required_with:claim', 'array', 'min:1'],
@@ -292,6 +327,7 @@ class VoucherInstructionsData extends Data
                 'email' => $validated['feedback']['email'] ?? null,
                 'mobile' => $validated['feedback']['mobile'] ?? null,
                 'webhook' => $validated['feedback']['webhook'] ?? null,
+                ...(isset($validated['feedback']['webhooks']) ? ['webhooks' => $validated['feedback']['webhooks']] : []),
             ],
             'rider' => [
                 'message' => $validated['rider']['message'] ?? null,
@@ -364,6 +400,11 @@ class VoucherInstructionsData extends Data
                 'fallback' => $validated['execution']['fallback'] ?? null,
                 'visibility' => $validated['execution']['visibility'] ?? null,
                 'metadata' => $validated['execution']['metadata'] ?? null,
+                ...(($validated['execution']['schema'] ?? ExecutionInstructionData::SCHEMA) === ExecutionInstructionData::SCHEMA_V2 ? [
+                    'settlement' => $validated['execution']['settlement'] ?? null,
+                    'value_flow' => $validated['execution']['value_flow'] ?? null,
+                    'events' => $validated['execution']['events'] ?? null,
+                ] : []),
             ] : null,
             'claim' => isset($validated['claim']) ? [
                 'outcomes' => $validated['claim']['outcomes'],
@@ -375,6 +416,9 @@ class VoucherInstructionsData extends Data
                 'profile' => $validated['claim']['profile'] ?? ClaimInstructionData::SCHEMA,
             ] : null,
             'slice_plan' => $validated['slice_plan'] ?? null,
+            ...(isset($validated['presentation']) ? ['presentation' => $validated['presentation']] : []),
+            ...(isset($validated['pricing']) ? ['pricing' => $validated['pricing']] : []),
+            ...(isset($validated['campaign']) ? ['campaign' => $validated['campaign']] : []),
         ];
 
         return VoucherInstructionsData::from($data_array);

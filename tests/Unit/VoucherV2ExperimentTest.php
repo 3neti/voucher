@@ -64,7 +64,8 @@ it('makes selected notification events workflow specific', function () {
     expect(fn () => $catalog->validate(['unknown']))->toThrow(InvalidArgumentException::class);
 });
 
-it('holds a partial campaign payment for resolution and retains receipts when topped up', function () {
+it('documents the experimental short-payment limitation and retains receipts when topped up', function () {
+    // TODO: Issue an inactive Pay Code for agent resolution as agreed for AUI.
     $case = new CampaignCase('campaign-A', 5000, 0, 500);
     $case->recognize('payment-1', 'campaign-A', 4500, 'PHP', true);
     expect($case->state)->toBe('needs_resolution')->and($case->code)->toBeNull();

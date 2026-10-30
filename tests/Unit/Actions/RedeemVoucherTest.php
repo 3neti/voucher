@@ -8,6 +8,7 @@ use LBHurtado\Voucher\Contracts\RedeemsVouchers;
 use LBHurtado\Voucher\Data\ExecutionContextData;
 use LBHurtado\Voucher\Data\ExecutionResultData;
 use LBHurtado\Voucher\Exceptions\UnknownExecutionDriverException;
+use LBHurtado\Voucher\Exceptions\UnsupportedExecutionInstructionSchemaException;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\DisburseCash;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedeemerAndCash;
 use LBHurtado\Voucher\Pipelines\RedeemedVoucher\ValidateRedemptionContract;
@@ -237,3 +238,13 @@ class RecordingExecutionDriver implements ExecutionDriverContract
         return ExecutionResultData::succeeded($this->key);
     }
 }
+
+it('fails closed for an unsupported stored execution schema', function () {
+    $voucher = issueVoucherWithExecutionDriver('default');
+    $metadata = $voucher->metadata;
+    data_set($metadata, 'instructions.execution.schema', 'voucher.execution.v3');
+    $voucher->forceFill(['metadata' => $metadata])->save();
+    $contact = makeContactForRedemption();
+    expect(fn () => RedeemVoucher::run($contact, $voucher->code))
+        ->toThrow(UnsupportedExecutionInstructionSchemaException::class);
+});

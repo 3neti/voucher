@@ -5,6 +5,7 @@ namespace LBHurtado\Voucher\Data;
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
 use Propaganistas\LaravelPhone\Rules\Phone;
 use Spatie\LaravelData\Data;
+use Spatie\LaravelData\Optional;
 
 class FeedbackInstructionData extends Data
 {
@@ -14,6 +15,7 @@ class FeedbackInstructionData extends Data
         public ?string $email = null,
         public ?string $mobile = null,
         public ?string $webhook = null,
+        public array|Optional $webhooks = new Optional,
     ) {
         $this->applyRulesAndDefaults();
     }

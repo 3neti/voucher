@@ -125,10 +125,10 @@ it('preserves explicit execution schema versions', function () {
 
 it('rejects unsupported explicit execution schema versions', function () {
     ExecutionInstructionData::from([
-        'schema' => 'voucher.execution.v2',
+        'schema' => 'voucher.execution.v3',
         'driver' => 'default',
     ]);
-})->throws(UnsupportedExecutionInstructionSchemaException::class, 'Unsupported execution instruction schema [voucher.execution.v2].');
+})->throws(UnsupportedExecutionInstructionSchemaException::class, 'Unsupported execution instruction schema [voucher.execution.v3].');
 
 it('serializes execution instructions into voucher instruction payloads', function () {
     $instructions = VoucherInstructionsData::createFromAttribs([

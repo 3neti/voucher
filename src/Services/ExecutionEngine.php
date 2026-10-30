@@ -9,6 +9,7 @@ class ExecutionEngine
 {
     public function __construct(
         private readonly ExecutionDriverRegistry $drivers,
+        private readonly ?ExecutionInstructionGuard $instructionGuard = null,
     ) {}
 
     public function driverKeyFor(ExecutionContextData $context): string
@@ -18,6 +19,8 @@ class ExecutionEngine
 
     public function execute(ExecutionContextData $context): ExecutionResultData
     {
+        ($this->instructionGuard ?? app(ExecutionInstructionGuard::class))->assertExecutable($context);
+
         return $this->drivers
             ->resolve($this->driverKeyFor($context))
             ->execute($context);

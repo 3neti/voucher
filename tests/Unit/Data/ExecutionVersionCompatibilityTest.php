@@ -17,12 +17,49 @@ it('defaults old instructions to v1 and preserves v2 execution fields', function
         ->and($v2->execution->schema)->toBe('voucher.execution.v2')
         ->and($v2->execution->settlement['driver'])->toBe('philhealth-bst')
         ->and($v2->execution->value_flow['destination'])->toBe('instapay.gcash.mobile:09179999999')
-        ->and($v2->execution->events['attest']['actor'])->toBe('beneficiary');
+        ->and($v2->execution->events['attest']['actor'])->toBe('beneficiary')
+        ->and($v1->execution->settlementData())->toBeNull()
+        ->and($v2->execution->settlementData()->driver)->toBe('philhealth-bst')
+        ->and($v2->execution->valueFlowData()->destination)->toBe('instapay.gcash.mobile:09179999999')
+        ->and($v2->execution->eventData()['attest']->actor)->toBe('beneficiary');
 });
 
 it('rejects unsupported future execution schema', function (): void {
     expect(fn () => ExecutionInstructionData::from(['schema' => 'voucher.execution.v3']))->toThrow(UnsupportedExecutionInstructionSchemaException::class);
 });
+
+it('preserves legacy validation when old execution data contains additional fields', function (): void {
+    $input = ['cash' => ['amount' => 0, 'currency' => 'PHP', 'validation' => ['country' => 'PH']],
+        'inputs' => ['fields' => []], 'feedback' => [], 'rider' => [], 'count' => 1, 'prefix' => 'PAY', 'mask' => '****',
+        'execution' => ['schema' => 'voucher.execution.v1', 'settlement' => ['legacy_custom' => true]]];
+
+    expect(VoucherInstructionsData::createFromAttribs($input)->execution->schema)->toBe('voucher.execution.v1');
+});
+
+it('validates the structure of v2 settlement, value flow and event declarations', function (string $path, mixed $value): void {
+    $input = [
+        'cash' => ['amount' => 0, 'currency' => 'PHP', 'validation' => ['country' => 'PH']],
+        'inputs' => ['fields' => []], 'feedback' => [], 'rider' => [], 'count' => 1, 'prefix' => 'PAY', 'mask' => '****',
+        'execution' => [
+            'schema' => 'voucher.execution.v2', 'driver' => 'settlement_envelope',
+            'settlement' => ['driver' => 'philhealth-bst', 'readiness_gate' => 'settleable'],
+            'value_flow' => ['destination' => 'instapay.gcash.mobile:09179999999'],
+            'events' => ['attest' => ['actor' => 'beneficiary', 'requires' => [], 'surface' => 'claim', 'authentication' => 'anonymous']],
+        ],
+    ];
+    data_set($input, $path, $value);
+
+    expect(fn () => VoucherInstructionsData::createFromAttribs($input))->toThrow(ValidationException::class);
+})->with([
+    ['execution.settlement.unrecognized', 'unsafe'],
+    ['execution.settlement.driver', ''],
+    ['execution.value_flow.destination', ''],
+    ['execution.value_flow.unrecognized', 'unsafe'],
+    ['execution.events.attest.actor', ''],
+    ['execution.events.attest.requires', 'not-a-list'],
+    ['execution.events.attest.authentication', 'bypass'],
+    ['execution.events.attest.unrecognized', 'unsafe'],
+]);
 
 it('round trips v2 voucher fields without adding them to v1 instructions', function (): void {
     $base = ['cash' => ['amount' => 0, 'currency' => 'PHP', 'validation' => ['country' => 'PH']], 'inputs' => ['fields' => []], 'feedback' => [], 'rider' => [], 'count' => 1, 'prefix' => 'PAY', 'mask' => '****'];
@@ -33,14 +70,20 @@ it('round trips v2 voucher fields without adding them to v1 instructions', funct
         'pricing' => ['quote_reference' => 'quote:1', 'currency' => 'PHP', 'fee_bearer' => 'issuer'],
         'campaign' => ['campaign_reference' => 'campaign:1', 'campaign_revision' => '1', 'template_id' => 'aui', 'template_version' => '2', 'definition_hash' => str_repeat('a', 64)],
     ];
-    $v2 = VoucherInstructionsData::createFromAttribs([...$base, ...$fields, 'execution' => ['schema' => 'voucher.execution.v2']])->toArray();
+    $typed = VoucherInstructionsData::createFromAttribs([...$base, ...$fields, 'execution' => ['schema' => 'voucher.execution.v2']]);
+    $v2 = $typed->toArray();
 
     expect($v1)->not->toHaveKeys(['presentation', 'pricing', 'campaign'])
         ->and($v1['feedback'])->not->toHaveKey('webhooks')
         ->and($v2['feedback']['webhooks'])->toBe($fields['feedback']['webhooks'])
         ->and($v2['presentation'])->toBe($fields['presentation'])
         ->and($v2['pricing'])->toBe($fields['pricing'])
-        ->and($v2['campaign'])->toBe($fields['campaign']);
+        ->and($v2['campaign'])->toBe($fields['campaign'])
+        ->and($typed->presentationData()->stamp->design_id)->toBe('simple')
+        ->and($typed->presentationData()->share->title)->toBe('Receipt')
+        ->and($typed->pricingData()->quote_reference)->toBe('quote:1')
+        ->and($typed->campaignData()->campaign_reference)->toBe('campaign:1')
+        ->and($typed->feedback->webhookSubscriptions()[0]->events)->toBe(['attestation.recorded']);
 });
 
 it('rejects v2 voucher fields on legacy instructions', function (): void {

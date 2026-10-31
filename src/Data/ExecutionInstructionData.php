@@ -45,4 +45,33 @@ class ExecutionInstructionData extends Data
             'events' => ['nullable', 'array'],
         ];
     }
+
+    public function settlementData(): ?ExecutionSettlementData
+    {
+        return $this->schema === self::SCHEMA_V2 && $this->settlement !== null
+            ? ExecutionSettlementData::from($this->settlement)
+            : null;
+    }
+
+    public function valueFlowData(): ?ExecutionValueFlowData
+    {
+        return $this->schema === self::SCHEMA_V2 && $this->value_flow !== null
+            ? ExecutionValueFlowData::from($this->value_flow)
+            : null;
+    }
+
+    /** @return array<string, ExecutionEventData> */
+    public function eventData(): array
+    {
+        if ($this->schema !== self::SCHEMA_V2 || $this->events === null) {
+            return [];
+        }
+
+        $events = [];
+        foreach ($this->events as $key => $event) {
+            $events[$key] = ExecutionEventData::from($event);
+        }
+
+        return $events;
+    }
 }

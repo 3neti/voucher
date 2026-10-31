@@ -73,6 +73,27 @@ class VoucherInstructionsData extends Data
         //        $this->ttl = $ttl ?: CarbonInterval::hours(config('instructions.ttl'));
     }
 
+    public function presentationData(): ?VoucherPresentationData
+    {
+        return $this->execution?->schema === ExecutionInstructionData::SCHEMA_V2 && is_array($this->presentation)
+            ? VoucherPresentationData::from($this->presentation)
+            : null;
+    }
+
+    public function pricingData(): ?VoucherPricingDecisionData
+    {
+        return $this->execution?->schema === ExecutionInstructionData::SCHEMA_V2 && is_array($this->pricing)
+            ? VoucherPricingDecisionData::from($this->pricing)
+            : null;
+    }
+
+    public function campaignData(): ?VoucherCampaignData
+    {
+        return $this->execution?->schema === ExecutionInstructionData::SCHEMA_V2 && is_array($this->campaign)
+            ? VoucherCampaignData::from($this->campaign)
+            : null;
+    }
+
     public static function rules(): array
     {
         return [
@@ -295,9 +316,35 @@ class VoucherInstructionsData extends Data
         ];
     }
 
+    private static function v2ExecutionRules(): array
+    {
+        return [
+            'execution.settlement' => ['nullable', 'array:reference,driver,version,readiness_gate,payment_requirement'],
+            'execution.settlement.reference' => ['nullable', 'string', 'min:1', 'max:255'],
+            'execution.settlement.driver' => ['required_with:execution.settlement', 'string', 'min:1', 'max:120'],
+            'execution.settlement.version' => ['nullable', 'string', 'min:1', 'max:120'],
+            'execution.settlement.readiness_gate' => ['nullable', 'string', 'min:1', 'max:120'],
+            'execution.settlement.payment_requirement' => ['nullable', 'string', 'min:1', 'max:120'],
+            'execution.value_flow' => ['nullable', 'array:source,destination'],
+            'execution.value_flow.source' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
+            'execution.value_flow.destination' => ['sometimes', 'required', 'string', 'min:1', 'max:255'],
+            'execution.events' => ['nullable', 'array'],
+            'execution.events.*' => ['required', 'array:actor,requires,surface,authentication'],
+            'execution.events.*.actor' => ['required', 'string', 'min:1', 'max:120'],
+            'execution.events.*.requires' => ['sometimes', 'array'],
+            'execution.events.*.requires.*' => ['required', 'string', 'min:1', 'max:120'],
+            'execution.events.*.surface' => ['nullable', 'string', 'min:1', 'max:120'],
+            'execution.events.*.authentication' => ['nullable', 'string', 'in:anonymous,required,optional'],
+        ];
+    }
+
     public static function createFromAttribs(array $attribs): VoucherInstructionsData
     {
-        $validated = validator($attribs, static::rules())->validate();
+        $rules = static::rules();
+        if (data_get($attribs, 'execution.schema') === ExecutionInstructionData::SCHEMA_V2) {
+            $rules = array_replace($rules, self::v2ExecutionRules());
+        }
+        $validated = validator($attribs, $rules)->validate();
         $data_array = [
             'cash' => [
                 'amount' => $validated['cash']['amount'],

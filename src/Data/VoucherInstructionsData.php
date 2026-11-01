@@ -237,6 +237,12 @@ class VoucherInstructionsData extends Data
             'execution.settlement' => ['nullable', 'array'],
             'execution.value_flow' => ['nullable', 'array'],
             'execution.events' => ['nullable', 'array'],
+            'execution.document_requirements' => ['prohibited_unless:execution.schema,'.ExecutionInstructionData::SCHEMA_V2, 'nullable', 'array', 'max:20', 'list'],
+            'execution.document_requirements.*' => ['required', 'array:type,timing,requires_acceptance,contributor'],
+            'execution.document_requirements.*.type' => ['required', 'string', 'max:64', 'distinct'],
+            'execution.document_requirements.*.timing' => ['required', 'in:optional,before_payment,later_review'],
+            'execution.document_requirements.*.requires_acceptance' => ['required', 'boolean'],
+            'execution.document_requirements.*.contributor' => ['required', 'in:payer,claimant,invited'],
 
             'claim' => ['nullable', 'array'],
             'claim.outcomes' => ['required_with:claim', 'array', 'min:1'],
@@ -451,6 +457,7 @@ class VoucherInstructionsData extends Data
                     'settlement' => $validated['execution']['settlement'] ?? null,
                     'value_flow' => $validated['execution']['value_flow'] ?? null,
                     'events' => $validated['execution']['events'] ?? null,
+                    'document_requirements' => $validated['execution']['document_requirements'] ?? null,
                 ] : []),
             ] : null,
             'claim' => isset($validated['claim']) ? [

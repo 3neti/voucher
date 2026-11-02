@@ -64,6 +64,7 @@ class VoucherInstructionsData extends Data
         public array|Optional $presentation = new Optional,
         public array|Optional $pricing = new Optional,
         public array|Optional $campaign = new Optional,
+        public VoucherPaymentDetailsData|Optional $payment_details = new Optional,
     ) {
         if ($this->fee_bearer !== null && ! in_array($this->fee_bearer, ['issuer', 'payer'], true)) {
             throw new InvalidArgumentException('Fee bearer must be issuer or payer.');
@@ -136,6 +137,18 @@ class VoucherInstructionsData extends Data
             'presentation.share.title' => ['nullable', 'string'],
             'presentation.share.description' => ['nullable', 'string'],
             'presentation.share.image_source' => ['nullable', 'string'],
+            'payment_details' => ['prohibited_unless:execution.schema,voucher.execution.v2', 'prohibited_unless:voucher_type,payable,settlement', 'array:description,reference,fields,documents'],
+            'payment_details.description' => ['nullable', 'string', 'max:2000'],
+            'payment_details.reference' => ['nullable', 'string', 'max:255'],
+            'payment_details.fields' => ['sometimes', 'array', 'max:20'],
+            'payment_details.fields.*' => ['required', 'array:label,value'],
+            'payment_details.fields.*.label' => ['required', 'string', 'max:100'],
+            'payment_details.fields.*.value' => ['required', 'string', 'max:1000'],
+            'payment_details.documents' => ['sometimes', 'array', 'max:5'],
+            'payment_details.documents.*' => ['required', 'array:id,type,label'],
+            'payment_details.documents.*.id' => ['required', 'string', 'ulid', 'distinct'],
+            'payment_details.documents.*.type' => ['required', 'string', 'max:64'],
+            'payment_details.documents.*.label' => ['required', 'string', 'max:255'],
             'pricing' => ['prohibited_unless:execution.schema,voucher.execution.v2', 'array:quote_reference,currency,fee_bearer,quote_hash'],
             'pricing.quote_reference' => ['required_with:pricing', 'string'],
             'pricing.currency' => ['required_with:pricing', 'string', 'size:3'],
@@ -473,6 +486,7 @@ class VoucherInstructionsData extends Data
             ...(isset($validated['presentation']) ? ['presentation' => $validated['presentation']] : []),
             ...(isset($validated['pricing']) ? ['pricing' => $validated['pricing']] : []),
             ...(isset($validated['campaign']) ? ['campaign' => $validated['campaign']] : []),
+            ...(isset($validated['payment_details']) ? ['payment_details' => $validated['payment_details']] : []),
         ];
 
         return VoucherInstructionsData::from($data_array);

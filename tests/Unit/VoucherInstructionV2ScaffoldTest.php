@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Illuminate\Validation\ValidationException;
 use LBHurtado\Voucher\Data\VoucherInstructionsData;
+use LBHurtado\Voucher\Data\VoucherPaymentDetailFieldData;
+use LBHurtado\Voucher\Data\VoucherPaymentDetailsData;
+use LBHurtado\Voucher\Data\VoucherPaymentDocumentData;
 use VoucherV2Experiment\EventCatalog;
 use VoucherV2Experiment\PhilhealthWorkflow;
 use VoucherV2Experiment\VoucherInstructionV2Factory;
@@ -69,6 +72,45 @@ function scaffoldInstruction(string $driver = 'philhealth-bst'): array
         'campaign' => ['campaign_reference' => 'campaign:1', 'campaign_revision' => '1', 'template_id' => 'aui.application', 'template_version' => '2.0.0', 'definition_hash' => str_repeat('b', 64), 'payment_recognition_reference' => 'recognition:1'],
     ];
 }
+
+it('round trips typed v2 payment details and rejects them under v1', function () {
+    $input = scaffoldInstruction();
+    $input['payment_details'] = [
+        'description' => 'Laptop repair',
+        'reference' => 'INV-001',
+        'fields' => [['label' => 'Service', 'value' => 'Screen']],
+        'documents' => [['id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV', 'type' => 'invoice', 'label' => 'Invoice']],
+    ];
+    $details = VoucherInstructionsData::createFromAttribs($input)->payment_details;
+    expect($details)->toBeInstanceOf(VoucherPaymentDetailsData::class)
+        ->and($details->fields[0])->toBeInstanceOf(VoucherPaymentDetailFieldData::class)
+        ->and($details->documents[0])->toBeInstanceOf(VoucherPaymentDocumentData::class)
+        ->and($details->toArray())->toBe($input['payment_details']);
+    unset($input['execution']);
+    expect(fn () => VoucherInstructionsData::createFromAttribs($input))->toThrow(ValidationException::class);
+});
+
+it('rejects invalid or misplaced payment details', function (callable $change) {
+    $input = scaffoldInstruction();
+    $input['payment_details'] = [
+        'documents' => [['id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV', 'type' => 'invoice', 'label' => 'Invoice']],
+    ];
+    $change($input);
+    expect(fn () => VoucherInstructionsData::createFromAttribs($input))->toThrow(ValidationException::class);
+})->with([
+    'disbursable voucher' => [function (array &$input): void {
+        $input['voucher_type'] = 'redeemable';
+    }],
+    'invalid document id' => [function (array &$input): void {
+        $input['payment_details']['documents'][0]['id'] = 'not-a-ulid';
+    }],
+    'duplicate documents' => [function (array &$input): void {
+        $input['payment_details']['documents'][] = $input['payment_details']['documents'][0];
+    }],
+    'unapproved attributes' => [function (array &$input): void {
+        $input['payment_details']['documents'][0]['url'] = 'https://example.test';
+    }],
+]);
 
 it('scaffolds and serializes typed voucher-level v2 sections with the real v1 core', function () {
     $instruction = VoucherInstructionV2Factory::make(scaffoldInstruction(), scaffoldCatalog());

@@ -22,6 +22,7 @@ class ExecutionInstructionData extends Data
         public ?array $settlement = null,
         public ?array $value_flow = null,
         public ?array $events = null,
+        public ?array $document_requirements = null,
     ) {
         if (! in_array($this->schema, [self::SCHEMA, self::SCHEMA_V2], true)) {
             throw UnsupportedExecutionInstructionSchemaException::forSchema($this->schema);
@@ -43,6 +44,12 @@ class ExecutionInstructionData extends Data
             'settlement' => ['nullable', 'array'],
             'value_flow' => ['nullable', 'array'],
             'events' => ['nullable', 'array'],
+            'document_requirements' => ['prohibited_unless:schema,'.self::SCHEMA_V2, 'nullable', 'array', 'max:20', 'list'],
+            'document_requirements.*' => ['required', 'array:type,timing,requires_acceptance,contributor'],
+            'document_requirements.*.type' => ['required', 'string', 'max:64', 'distinct'],
+            'document_requirements.*.timing' => ['required', 'in:optional,before_payment,later_review'],
+            'document_requirements.*.requires_acceptance' => ['required', 'boolean'],
+            'document_requirements.*.contributor' => ['required', 'in:payer,claimant,invited'],
         ];
     }
 

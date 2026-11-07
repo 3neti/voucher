@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use LBHurtado\Contact\Classes\BankAccount;
 use LBHurtado\EmiCore\Contracts\BankRegistryContract;
 use LBHurtado\EmiCore\Contracts\PayoutProvider;
+use LBHurtado\EmiCore\Contracts\PendingPayoutApproval;
 use LBHurtado\EmiCore\Data\PayoutRequestData;
 use LBHurtado\EmiCore\Enums\PayoutStatus;
 use LBHurtado\EmiCore\Enums\SettlementRail;
@@ -122,6 +123,9 @@ class DisburseCash
                 throw new RuntimeException('Gateway returned failed status - disbursement failed');
             }
         } catch (\Throwable $e) {
+            if ($e instanceof PendingPayoutApproval && config('voucher.payout.bubble_pending_approval', false)) {
+                throw $e;
+            }
             Log::warning('[DisburseCash] Disbursement failed — recording pending status', [
                 'voucher' => $voucher->code,
                 'error' => $e->getMessage(),

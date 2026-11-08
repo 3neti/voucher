@@ -4,6 +4,7 @@ namespace LBHurtado\Voucher\Specifications;
 
 use LBHurtado\Voucher\Data\RedemptionContext;
 use LBHurtado\Voucher\Enums\VoucherInputField;
+use LBHurtado\Voucher\Support\ClaimDocumentEvidenceShape;
 
 /**
  * Validates that all required input fields from form flow were collected.
@@ -33,6 +34,15 @@ class InputsSpecification implements RedemptionSpecificationInterface
 
         // Check each required field is present in collected inputs
         foreach ($requiredFieldNames as $fieldName) {
+            if ($fieldName === VoucherInputField::DOCUMENTS->value) {
+                if (! (new ClaimDocumentEvidenceShape)->isComplete(
+                    $voucher->instructions?->inputs?->documents, $collectedInputs['documents'] ?? [],
+                )) {
+                    return false;
+                }
+
+                continue;
+            }
             // Skip special fields that are handled by other specifications
             if ($this->isSpecialField($fieldName)) {
                 continue;
@@ -98,6 +108,15 @@ class InputsSpecification implements RedemptionSpecificationInterface
         );
 
         foreach ($requiredFieldNames as $fieldName) {
+            if ($fieldName === VoucherInputField::DOCUMENTS->value) {
+                if (! (new ClaimDocumentEvidenceShape)->isComplete(
+                    $voucher->instructions?->inputs?->documents, $collectedInputs['documents'] ?? [],
+                )) {
+                    $missing[] = $fieldName;
+                }
+
+                continue;
+            }
             if ($this->isSpecialField($fieldName)) {
                 continue;
             }

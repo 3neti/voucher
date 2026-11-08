@@ -9,6 +9,7 @@ use LBHurtado\Voucher\Enums\RedemptionValidationCode;
 use LBHurtado\Voucher\Enums\RedemptionValidationSeverity;
 use LBHurtado\Voucher\Enums\VoucherInputField;
 use LBHurtado\Voucher\Models\Voucher;
+use LBHurtado\Voucher\Support\ClaimDocumentEvidenceShape;
 
 class RequiredInputFieldsValidator implements RedemptionRuleValidator
 {
@@ -44,6 +45,9 @@ class RequiredInputFieldsValidator implements RedemptionRuleValidator
         $issues = [];
 
         foreach ($fields as $field) {
+            if ($field === VoucherInputField::DOCUMENTS->value && $this->documentsPresent($voucher, $evidence)) {
+                continue;
+            }
             if ($this->isFieldPresent($field, $evidence)) {
                 continue;
             }
@@ -57,6 +61,14 @@ class RequiredInputFieldsValidator implements RedemptionRuleValidator
         }
 
         return $issues;
+    }
+
+    private function documentsPresent(Voucher $voucher, RedemptionEvidenceData $evidence): bool
+    {
+        return (new ClaimDocumentEvidenceShape)->isComplete(
+            $voucher->instructions?->inputs?->documents,
+            data_get($evidence->raw, 'inputs.documents', []),
+        );
     }
 
     protected function isFieldPresent(string $field, RedemptionEvidenceData $evidence): bool

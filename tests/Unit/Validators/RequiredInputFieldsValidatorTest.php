@@ -1,9 +1,44 @@
 <?php
 
+use LBHurtado\Voucher\Data\RedemptionContext;
 use LBHurtado\Voucher\Data\RedemptionEvidenceData;
 use LBHurtado\Voucher\Enums\RedemptionValidationCode;
 use LBHurtado\Voucher\Enums\RedemptionValidationSeverity;
+use LBHurtado\Voucher\Services\RedemptionContractEngine;
+use LBHurtado\Voucher\Specifications\InputsSpecification;
 use LBHurtado\Voucher\Validators\RequiredInputFieldsValidator;
+
+it('checks declared required document references and allows omitted optional documents', function (): void {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: ['inputs' => [
+        'fields' => ['documents'],
+        'documents' => [
+            ['key' => 'id', 'label' => 'Identity', 'accept' => ['application/pdf'], 'required' => true],
+            ['key' => 'extra', 'label' => 'Extra', 'accept' => ['application/pdf'], 'required' => false],
+        ],
+    ]]));
+    $engine = app(RedemptionContractEngine::class);
+    expect($engine->validateInputs($voucher, ['documents' => []])->should_block)->toBeTrue()
+        ->and($engine->validateInputs($voucher, ['documents' => [['key' => 'id', 'reference' => '01ARZ3NDEKTSV4RRFFQ69G5FAV']]])->should_block)->toBeFalse()
+        ->and($engine->validateInputs($voucher, ['documents' => [['key' => 'id', 'reference' => 'invalid']]])->should_block)->toBeTrue();
+    $guard = app(InputsSpecification::class);
+    $missing = new RedemptionContext(mobile: '09173011987', inputs: []);
+    $complete = new RedemptionContext(mobile: '09173011987', inputs: [
+        'documents' => [['key' => 'id', 'reference' => '01ARZ3NDEKTSV4RRFFQ69G5FAV']],
+    ]);
+    expect($guard->passes($voucher, $missing))->toBeFalse()
+        ->and($guard->getMissingFields($voucher, $missing))->toContain('documents')
+        ->and($guard->passes($voucher, $complete))->toBeTrue();
+});
+
+it('does not require an upload when every requested document is optional', function (): void {
+    $voucher = issueVoucher(validVoucherInstructions(overrides: ['inputs' => [
+        'fields' => ['documents'],
+        'documents' => [['key' => 'id', 'label' => 'Identity', 'accept' => ['application/pdf'], 'required' => false]],
+    ]]));
+    expect(app(RedemptionContractEngine::class)->validateInputs($voucher, ['documents' => []])->should_block)->toBeFalse();
+    $context = new RedemptionContext(mobile: '09173011987', inputs: []);
+    expect(app(InputsSpecification::class)->passes($voucher, $context))->toBeTrue();
+});
 
 beforeEach(function () {
     $this->setupSystemUser();

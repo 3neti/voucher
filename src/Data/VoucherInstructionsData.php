@@ -118,7 +118,7 @@ class VoucherInstructionsData extends Data
             'inputs' => ['nullable', 'array'],
             'inputs.fields' => ['nullable', 'array'],
             'inputs.fields.*' => ['nullable', 'string', 'in:'.implode(',', VoucherInputField::values())],
-            'inputs.documents' => ['sometimes', 'array', 'list', 'max:'.max(1, (int) config('instructions.documents.max_items', 5))],
+            'inputs.documents' => ['sometimes', 'nullable', 'array', 'list', 'max:'.max(1, (int) config('instructions.documents.max_items', 5))],
             'inputs.documents.*' => ['required', 'array:key,label,accept,required'],
             'inputs.documents.*.key' => ['required', 'string', 'max:64', 'regex:/\A[a-zA-Z0-9_-]+\z/', 'distinct:ignore_case'],
             'inputs.documents.*.label' => ['required', 'string', 'max:100'],

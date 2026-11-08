@@ -4,6 +4,7 @@ namespace LBHurtado\Voucher\Data;
 
 use LBHurtado\Voucher\Data\Traits\HasSafeDefaults;
 use LBHurtado\Voucher\Enums\VoucherInputField;
+use Spatie\LaravelData\Attributes\DataCollectionOf;
 use Spatie\LaravelData\Attributes\WithCast;
 use Spatie\LaravelData\Casts\EnumCast;
 use Spatie\LaravelData\Data;
@@ -20,7 +21,9 @@ class InputFieldsData extends Data
      */
     public function __construct(
         #[WithCast(EnumCast::class, VoucherInputField::class)]
-        public ?array $fields = []
+        public ?array $fields = [],
+        #[DataCollectionOf(ClaimDocumentInstructionData::class)]
+        public ?array $documents = null,
     ) {
         $this->applyRulesAndDefaults();
         //        $this->fields = empty($fields) ? config('instructions.input_fields') : $fields;
@@ -39,7 +42,11 @@ class InputFieldsData extends Data
             $fields
         );
 
-        return new self($fields);
+        $documents = isset($input['documents']) && is_array($input['documents'])
+            ? array_map(fn ($item) => ClaimDocumentInstructionData::from($item), $input['documents'])
+            : null;
+
+        return new self($fields, $documents);
     }
 
     //    public static function fromArray(array $input): self

@@ -16,6 +16,7 @@ enum VoucherInputField: string
     case LOCATION = 'location';
     case OTP = 'otp';
     case SELFIE = 'selfie';
+    case DOCUMENTS = 'documents';
 
     public static function valuesToCsv(): string
     {
@@ -48,6 +49,7 @@ enum VoucherInputField: string
             self::OTP => 'OTP',
             self::SELFIE => 'Selfie Photo',
             self::KYC => 'Identity Verification (KYC)',
+            self::DOCUMENTS => 'Documents',
             // Add more custom labels here as needed
             default => $case->value,
         };

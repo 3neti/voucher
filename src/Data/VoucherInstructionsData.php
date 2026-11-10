@@ -118,6 +118,13 @@ class VoucherInstructionsData extends Data
             'inputs' => ['nullable', 'array'],
             'inputs.fields' => ['nullable', 'array'],
             'inputs.fields.*' => ['nullable', 'string', 'in:'.implode(',', VoucherInputField::values())],
+            'inputs.documents' => ['sometimes', 'nullable', 'array', 'list', 'max:'.max(1, (int) config('instructions.documents.max_items', 5))],
+            'inputs.documents.*' => ['required', 'array:key,label,accept,required'],
+            'inputs.documents.*.key' => ['required', 'string', 'max:64', 'regex:/\A[a-zA-Z0-9_-]+\z/', 'distinct:ignore_case'],
+            'inputs.documents.*.label' => ['required', 'string', 'max:100'],
+            'inputs.documents.*.accept' => ['required', 'array', 'list', 'min:1'],
+            'inputs.documents.*.accept.*' => ['required', 'string', 'in:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/png,image/jpeg'],
+            'inputs.documents.*.required' => ['required', 'boolean'],
             'feedback.mobile' => ['nullable', (new Phone)->country('PH')->type('mobile')],
             'feedback.email' => 'nullable|email',
             'feedback.webhook' => 'nullable|url',
@@ -363,7 +370,25 @@ class VoucherInstructionsData extends Data
         if (data_get($attribs, 'execution.schema') === ExecutionInstructionData::SCHEMA_V2) {
             $rules = array_replace($rules, self::v2ExecutionRules());
         }
-        $validated = validator($attribs, $rules)->validate();
+        $validator = validator($attribs, $rules);
+        $validator->after(function ($validator) use ($attribs): void {
+            $documents = data_get($attribs, 'inputs.documents', []);
+            $fields = data_get($attribs, 'inputs.fields', []);
+            if (is_array($documents) && $documents !== [] && (! is_array($fields) || ! in_array('documents', $fields, true))) {
+                $validator->errors()->add('inputs.documents', 'The documents field must be selected.');
+            }
+            if (is_array($fields) && in_array('documents', $fields, true) && (! is_array($documents) || $documents === [])) {
+                $validator->errors()->add('inputs.documents', 'At least one document must be configured.');
+            }
+            $keys = collect(is_array($documents) ? $documents : [])->pluck('key')->filter(fn ($key) => is_string($key))->map(fn ($key) => strtolower($key))->all();
+            foreach ((array) data_get($attribs, 'execution.document_requirements', []) as $requirement) {
+                $type = is_array($requirement) ? ($requirement['type'] ?? null) : null;
+                if (is_string($type) && in_array(strtolower($type), $keys, true)) {
+                    $validator->errors()->add('inputs.documents', 'A document cannot be configured in both claim and execution requirements.');
+                }
+            }
+        });
+        $validated = $validator->validate();
         $data_array = [
             'cash' => [
                 'amount' => $validated['cash']['amount'],
@@ -388,6 +413,7 @@ class VoucherInstructionsData extends Data
             ],
             'inputs' => [
                 'fields' => $validated['inputs']['fields'] ?? null,
+                ...(isset($validated['inputs']['documents']) ? ['documents' => $validated['inputs']['documents']] : []),
             ],
             'feedback' => [
                 'email' => $validated['feedback']['email'] ?? null,
